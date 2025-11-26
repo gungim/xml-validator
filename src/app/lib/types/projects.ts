@@ -13,3 +13,12 @@ export type CreateProjectResponse = Awaited<
   ReturnType<typeof prisma.project.create>
 >;
 
+export type UpdateProjectInput = {
+  name?: string;
+  description?: string;
+};
+
+export type GetProjectResponse = Awaited<
+  ReturnType<typeof prisma.project.findUnique>
+>;
+

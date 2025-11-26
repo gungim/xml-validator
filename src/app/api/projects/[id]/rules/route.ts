@@ -1,0 +1,114 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "../../../../lib/db";
+import { CreateRuleInput, GetRulesResponse } from "../../../../lib/types/rules";
+
+const VALID_DATA_TYPES = ["string", "number", "boolean", "object", "array"] as const;
+type DataTypeValue = typeof VALID_DATA_TYPES[number];
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<GetRulesResponse>> {
+  const { id: projectId } = await params;
+
+  const rules = await prisma.rule.findMany({
+    where: { projectId },
+    include: {
+      children: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json(rules);
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: projectId } = await params;
+  const body: CreateRuleInput = await request.json();
+
+  // Basic validation
+  if (!body.name || typeof body.name !== "string" || body.name.trim().length === 0) {
+    return NextResponse.json(
+      { error: "Rule name is required" },
+      { status: 400 }
+    );
+  }
+
+  if (!body.path || typeof body.path !== "string" || body.path.trim().length === 0) {
+    return NextResponse.json(
+      { error: "Rule path is required" },
+      { status: 400 }
+    );
+  }
+
+  if (!body.dataType || typeof body.dataType !== "string") {
+    return NextResponse.json(
+      { error: "Data type is required" },
+      { status: 400 }
+    );
+  }
+
+  // Validate dataType is a valid enum value
+  if (!VALID_DATA_TYPES.includes(body.dataType as any)) {
+    return NextResponse.json(
+      { error: `Invalid data type. Must be one of: ${VALID_DATA_TYPES.join(", ")}` },
+      { status: 400 }
+    );
+  }
+
+  // Validate parent rule if parentId is provided
+  if (body.parentId) {
+    const parent = await prisma.rule.findUnique({
+      where: { id: body.parentId },
+      include: { children: true },
+    });
+
+    if (!parent) {
+      return NextResponse.json(
+        { error: "Parent rule not found" },
+        { status: 404 }
+      );
+    }
+
+    if (parent.projectId !== projectId) {
+      return NextResponse.json(
+        { error: "Parent rule belongs to a different project" },
+        { status: 400 }
+      );
+    }
+
+    // Only object and array types can have children
+    if (parent.dataType !== "object" && parent.dataType !== "array") {
+      return NextResponse.json(
+        { error: "Only object and array rules can have child rules" },
+        { status: 400 }
+      );
+    }
+
+    // Array rules can only have 1 child
+    if (parent.dataType === "array" && parent.children.length >= 1) {
+      return NextResponse.json(
+        { error: "Array rules can only have 1 child rule" },
+        { status: 400 }
+      );
+    }
+  }
+
+  const rule = await prisma.rule.create({
+    data: {
+      name: body.name.trim(),
+      path: body.path.trim(),
+      required: body.required ?? false,
+      dataType: body.dataType as any,
+      description: body.description || null,
+      condition: body.condition || {},
+      projectId,
+      parentId: body.parentId || null,
+    },
+  });
+
+  return NextResponse.json(rule);
+}

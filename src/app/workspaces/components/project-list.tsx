@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useProjects } from "../../lib/hooks/projects";
 import { CreateProjectDialog } from "./create-project-dialog";
 
@@ -18,10 +19,12 @@ export default function ProjectList({ workspace_id }: ProjectListProps) {
           <span>Empty</span>
         </div>
       ) : (
-        <div>
+        <div className="space-y-2">
           {projects?.map((item) => (
-            <div key={item.id}>
-              <span>{item.name}</span>
+            <div key={item.id} className="p-4 border rounded hover:bg-gray-50">
+              <Link href={`/projects/${item.id}`} className="text-blue-600 hover:underline font-medium">
+                {item.name}
+              </Link>
             </div>
           ))}
         </div>

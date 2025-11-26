@@ -1,0 +1,57 @@
+import { prisma } from "../../lib/db";
+import { AddRuleDialog } from "../components/add-rule-dialog";
+import NotFound from "../../components/not-found";
+import { EditProjectDialog } from "../components/edit-project-dialog";
+import { RulesTable } from "../components/rules-table";
+
+export default async function ProjectDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  const project = await prisma.project.findUnique({
+    where: { id },
+    include: {
+      rules: true,
+    },
+  });
+
+  if (!project) {
+    return <NotFound />;
+  }
+
+  return (
+    <div className="p-8 max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="mb-8">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{project.name}</h1>
+            {project.description && (
+              <p className="text-gray-600">{project.description}</p>
+            )}
+          </div>
+          <EditProjectDialog
+            projectId={id}
+            currentName={project.name}
+            currentDescription={project.description}
+          />
+        </div>
+      </div>
+
+      {/* Rules Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">Rules</h2>
+          <AddRuleDialog projectId={id} />
+        </div>
+
+        <div className="bg-white rounded-lg border">
+          <RulesTable projectId={id} />
+        </div>
+      </div>
+    </div>
+  );
+}
