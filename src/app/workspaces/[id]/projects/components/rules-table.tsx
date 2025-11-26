@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useRules, useDeleteRule, useUpdateRule } from "../../lib/hooks/rules";
+import { useRules, useDeleteRule, useUpdateRule } from "../../../../lib/hooks/rules";
 import { AddRuleDialog } from "./add-rule-dialog";
 
 interface RulesTableProps {

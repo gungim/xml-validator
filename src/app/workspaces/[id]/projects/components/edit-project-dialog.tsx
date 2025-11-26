@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useUpdateProject } from "../../lib/hooks/projects";
+import { useUpdateProject } from "../../../../lib/hooks/projects";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required").trim(),

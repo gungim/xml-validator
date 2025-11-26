@@ -9,7 +9,7 @@ import { AddUserDialog } from "./components/add-user-dialog";
 import { EditUserDialog } from "./components/edit-user-dialog";
 import { DeleteUserDialog } from "./components/delete-user-dialog";
 import { PermissionsDialog } from "./components/permissions-dialog";
-import { UserWithPermissions } from "../lib/types/users";
+import { UserWithPermissions } from "../../lib/types/users";
 import { Role } from "@prisma/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 

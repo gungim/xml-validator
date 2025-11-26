@@ -14,9 +14,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCreateRule } from "../../lib/hooks/rules";
-import { useGlobalRules } from "../../lib/hooks/global-rules";
-import type { StringCondition, NumberCondition } from "../../lib/types/rules";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCreateRule } from "../../../../lib/hooks/rules";
+import { useGlobalRules } from "../../../../lib/hooks/global-rules";
+import type { StringCondition, NumberCondition } from "../../../../lib/types/rules";
 
 const ruleSchema = z.object({
   name: z.string().min(1, "Rule name is required"),
@@ -231,11 +232,10 @@ export function AddRuleDialog({ projectId, parentId, parentDataType, workspaceId
           {globalRules && globalRules.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="globalRule">Apply Global Rule (Optional)</Label>
-              <select
-                id="globalRule"
-                value={selectedGlobalRuleId || ""}
-                onChange={(e) => {
-                  const id = e.target.value ? Number(e.target.value) : null;
+              <Select
+                value={selectedGlobalRuleId?.toString() || ""}
+                onValueChange={(value) => {
+                  const id = value ? Number(value) : null;
                   setSelectedGlobalRuleId(id);
                   
                   if (id) {
@@ -265,15 +265,18 @@ export function AddRuleDialog({ projectId, parentId, parentDataType, workspaceId
                   }
                 }}
                 disabled={createRule.isPending}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">None (Custom Rule)</option>
-                {globalRules.map((rule) => (
-                  <option key={rule.id} value={rule.id}>
-                    {rule.name} ({rule.dataType})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="globalRule" className="w-full">
+                  <SelectValue placeholder="None (Custom Rule)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {globalRules.map((rule) => (
+                    <SelectItem key={rule.id} value={rule.id.toString()}>
+                      {rule.name} ({rule.dataType})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {selectedGlobalRuleId && (
                 <p className="text-xs text-blue-600">
                   ℹ️ Applying a global rule locks the data type and validation conditions.
@@ -297,26 +300,27 @@ export function AddRuleDialog({ projectId, parentId, parentDataType, workspaceId
             {(field) => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Data Type</Label>
-                <select
-                  id={field.name}
-                  name={field.name}
+                <Select
                   value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => {
-                    field.handleChange(e.target.value);
+                  onValueChange={(value) => {
+                    field.handleChange(value);
                     // Reset conditions when dataType changes
                     setStringCondition({ allowEmpty: true });
                     setNumberCondition({});
                   }}
                   disabled={createRule.isPending || selectedGlobalRuleId !== null}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {dataTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id={field.name} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dataTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {field.state.meta.errors.length > 0 && (
                   <p className="text-sm text-red-500">
                     {field.state.meta.errors[0]}

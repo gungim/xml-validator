@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UserWithPermissions } from "@/app/lib/types/users";
+import { UserWithPermissions } from "../../../lib/types/users";
 
 interface DeleteUserDialogProps {
   open: boolean;

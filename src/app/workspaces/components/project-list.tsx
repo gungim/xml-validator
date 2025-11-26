@@ -22,7 +22,7 @@ export default function ProjectList({ workspace_id }: ProjectListProps) {
         <div className="space-y-2">
           {projects?.map((item) => (
             <div key={item.id} className="p-4 border rounded hover:bg-gray-50">
-              <Link href={`/projects/${item.id}`} className="text-blue-600 hover:underline font-medium">
+              <Link href={`/workspaces/${workspace_id}/projects/${item.id}`} className="text-blue-600 hover:underline font-medium">
                 {item.name}
               </Link>
             </div>

@@ -1,18 +1,18 @@
-import { prisma } from "../../lib/db";
+import { prisma } from "../../../../lib/db";
 import { AddRuleDialog } from "../components/add-rule-dialog";
-import NotFound from "../../components/not-found";
+import NotFound from "../../../../components/not-found";
 import { EditProjectDialog } from "../components/edit-project-dialog";
 import { RulesTable } from "../components/rules-table";
 
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }) {
-  const { id } = await params;
+  const { projectId } = await params;
 
   const project = await prisma.project.findUnique({
-    where: { id },
+    where: { id: projectId },
     include: {
       rules: true,
       workspace: true, // Include to get workspaceId
@@ -35,7 +35,7 @@ export default async function ProjectDetailPage({
             )}
           </div>
           <EditProjectDialog
-            projectId={id}
+            projectId={projectId}
             currentName={project.name}
             currentDescription={project.description}
           />
@@ -46,11 +46,11 @@ export default async function ProjectDetailPage({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Rules</h2>
-          <AddRuleDialog projectId={id} workspaceId={project.workspaceId} />
+          <AddRuleDialog projectId={projectId} workspaceId={project.workspaceId} />
         </div>
 
         <div className="bg-white rounded-lg border">
-          <RulesTable projectId={id} workspaceId={project.workspaceId} />
+          <RulesTable projectId={projectId} workspaceId={project.workspaceId} />
         </div>
       </div>
     </div>

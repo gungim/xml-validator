@@ -1,7 +1,7 @@
-import NotFound from "../../components/not-found";
-import { prisma } from "../../lib/db";
-import ProjectList from "../components/project-list";
-import { GlobalRulesTable } from "../components/global-rules-table";
+import NotFound from "../../../components/not-found";
+import { prisma } from "../../../lib/db";
+import ProjectList from "../../components/project-list";
+import { GlobalRulesTable } from "../../components/global-rules-table";
 
 export default async function WorkspaceDetailPage({
   params,

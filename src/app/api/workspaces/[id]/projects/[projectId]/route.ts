@@ -1,6 +1,7 @@
+import { prisma } from "@/src/app/lib/db";
+import { GetProjectResponse, UpdateProjectInput } from "@/src/app/lib/types/projects";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../lib/db";
-import { GetProjectResponse, UpdateProjectInput } from "../../../lib/types/projects";
+
 
 export async function GET(
   request: NextRequest,

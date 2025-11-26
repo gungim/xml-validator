@@ -1,6 +1,8 @@
+
+import { prisma } from "@/src/app/lib/db";
+import { CreateRuleInput, GetRulesResponse } from "@/src/app/lib/types/rules";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../lib/db";
-import { CreateRuleInput, GetRulesResponse } from "../../../../lib/types/rules";
+
 
 const VALID_DATA_TYPES = ["string", "number", "boolean", "object", "array"] as const;
 type DataTypeValue = typeof VALID_DATA_TYPES[number];

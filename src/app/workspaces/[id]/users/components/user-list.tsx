@@ -3,9 +3,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { UserWithPermissions } from "@/app/lib/types/users";
 import { Role } from "@prisma/client";
 import { Edit, Trash2, Shield } from "lucide-react";
+import { UserWithPermissions } from "../../../lib/types/users";
 
 interface UserListProps {
   users: UserWithPermissions[];
