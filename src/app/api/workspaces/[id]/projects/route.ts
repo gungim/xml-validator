@@ -22,7 +22,28 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const data = await req.json();
-    const result = await prisma.project.create({ data });
+    
+    // Validate required fields
+    if (!data.name || typeof data.name !== "string" || data.name.trim().length === 0) {
+      return NextResponse.json(
+        { error: "Project name is required" },
+        { status: 400 }
+      );
+    }
+    
+    if (!data.workspaceId || typeof data.workspaceId !== "string") {
+      return NextResponse.json(
+        { error: "Workspace ID is required" },
+        { status: 400 }
+      );
+    }
+    
+    const result = await prisma.project.create({ 
+      data: {
+        name: data.name.trim(),
+        workspaceId: data.workspaceId,
+      }
+    });
     return NextResponse.json(result);
   } catch (err) {
     console.log(err);
@@ -34,6 +55,7 @@ export async function POST(req: Request) {
     );
   }
 }
+
 
 export async function PUT(req: Request) {
   try {
