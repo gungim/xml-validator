@@ -35,9 +35,9 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { xml } = await request.json();
+    const xml = await request.text();
 
-    if (typeof xml !== "string" || xml.trim().length === 0) {
+    if (xml.trim().length === 0) {
       return NextResponse.json(
         { error: "XML payload is required" },
         { status: 400 },
