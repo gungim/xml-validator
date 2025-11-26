@@ -20,7 +20,7 @@ export default function WorkspaceList({
     <ul className="divide-y border rounded-md">
       {workspaces.map((ws) => (
         <li key={ws.id} className="flex justify-between items-center px-4 py-2">
-          <Link href={`/workspaces/${ws.id}`}>
+          <Link href={`/workspaces/${ws.id}/projects`}>
             <span>{ws.name}</span>
           </Link>
           <div className="space-x-2">

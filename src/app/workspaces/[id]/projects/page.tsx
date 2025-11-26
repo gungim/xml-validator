@@ -20,15 +20,21 @@ export default async function WorkspaceDetailPage({
 
   return (
     <div className="container mx-auto p-6 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">{workspace.name}</h1>
-        <p className="text-gray-500 mt-1">
-          Created {workspace.createdAt.toLocaleDateString()}
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <div>
+            <h1 className="text-3xl font-bold">{workspace.name}</h1>
+          </div>
+          <div>
+            <p className="text-gray-500 mt-1">
+              Created {workspace.createdAt.toLocaleDateString()}
+            </p>
+          </div>
+
+        </div>
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold mb-4">Projects</h2>
         <ProjectList workspace_id={id} />
       </div>
 

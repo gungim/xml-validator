@@ -38,7 +38,20 @@ export default async function ProjectDetailPage({
             projectId={projectId}
             currentName={project.name}
             currentDescription={project.description}
+            currentSlug={project.endpointSlug}
+            workspaceId={project.workspaceId}
+            endpointSecret={project.endpointSecret}
           />
+        </div>
+        <div className="rounded border p-4 bg-muted/40 space-y-1">
+          <div className="text-sm font-medium">API Endpoint</div>
+          <div className="text-sm">
+            URL: <code>/api/validate/{project.endpointSlug}</code>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Include header <code>X-API-Key</code> with the value shown in the edit
+            dialog to validate XML against this project.
+          </p>
         </div>
       </div>
 

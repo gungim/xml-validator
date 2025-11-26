@@ -6,7 +6,6 @@ export type GetWorkspaceDetailResponse = Awaited<
 >;
 export async function GET(
 ) {
- console.log("Dev")
   try {
     const workspace = await prisma.workspace.findUnique({
       where: { id: "cmhc14k8l0000z43a9r93r1bs"},

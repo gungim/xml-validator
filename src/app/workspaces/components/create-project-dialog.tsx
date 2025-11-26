@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import {
@@ -15,9 +15,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateProject } from "../../lib/hooks/projects";
+import { CreateProjectResponse } from "../../lib/types/projects";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required").trim(),
+  endpointSlug: z
+    .string()
+    .min(1, "Endpoint slug is required")
+    .max(64, "Slug must be 64 characters or fewer")
+    .regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and dashes only"),
+  description: z.string().optional(),
 });
 
 interface CreateProjectDialogProps {
@@ -26,18 +33,35 @@ interface CreateProjectDialogProps {
 
 export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
   const [open, setOpen] = useState(false);
+  const [latestProject, setLatestProject] = useState<CreateProjectResponse | null>(null);
   const createProject = useCreateProject();
+  const slugPlaceholder = useMemo(
+    () => `workspace-${Math.floor(Math.random() * 1_000)}`,
+    [],
+  );
+
+  const normalizeSlug = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/--+/g, "-")
+      .replace(/^-+|-+$/g, "");
 
   const form = useForm({
     defaultValues: {
       name: "",
+      description: "",
+      endpointSlug: "",
     },
     onSubmit: async ({ value }) => {
       try {
-        await createProject.mutateAsync({
+        const result = await createProject.mutateAsync({
           name: value.name,
           workspaceId,
+          description: value.description || undefined,
+          endpointSlug: value.endpointSlug,
         });
+        setLatestProject(result);
         setOpen(false);
         form.reset();
       } catch (error) {
@@ -47,6 +71,7 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
   });
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>Create Project</Button>
@@ -99,6 +124,59 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
             )}
           </form.Field>
 
+          <form.Field
+            name="endpointSlug"
+            validators={{
+              onChange: ({ value }) => {
+                const result = projectSchema.shape.endpointSlug.safeParse(value);
+                if (!result.success) {
+                  return result.error.issues[0].message;
+                }
+                return undefined;
+              },
+            }}
+          >
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Endpoint Slug</Label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(normalizeSlug(e.target.value))}
+                  placeholder={slugPlaceholder}
+                  disabled={createProject.isPending}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Final URL: <code>/api/validate/{field.state.value || slugPlaceholder}</code>
+                </p>
+                {field.state.meta.errors.length > 0 && (
+                  <p className="text-sm text-red-500">
+                    {field.state.meta.errors[0]}
+                  </p>
+                )}
+              </div>
+            )}
+          </form.Field>
+
+          <form.Field name="description">
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Description (Optional)</Label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Enter project description"
+                  disabled={createProject.isPending}
+                />
+              </div>
+            )}
+          </form.Field>
+
           {createProject.isError && (
             <p className="text-sm text-red-500">
               Failed to create project. Please try again.
@@ -121,5 +199,22 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
         </form>
       </DialogContent>
     </Dialog>
+    {latestProject && (
+      <div className="mt-4 rounded border bg-muted/40 p-4">
+        <p className="text-sm font-medium mb-2">
+          Endpoint created. Keep this API key safe!
+        </p>
+        <div className="space-y-1 text-sm">
+          <div>
+            URL: <code>/api/validate/{latestProject.endpointSlug}</code>
+          </div>
+          <div>
+            Header <code>X-API-Key</code>:{" "}
+            <code className="break-all">{latestProject.endpointSecret}</code>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

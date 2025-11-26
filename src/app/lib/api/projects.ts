@@ -1,4 +1,10 @@
-import { GetProjectsResponse, CreateProjectInput, CreateProjectResponse, GetProjectResponse, UpdateProjectInput } from "../types/projects";
+import {
+  GetProjectsResponse,
+  CreateProjectInput,
+  CreateProjectResponse,
+  GetProjectResponse,
+  UpdateProjectInput,
+} from "../types/projects";
 
 export async function getProjects(
   workspaceId: string,
@@ -9,20 +15,27 @@ export async function getProjects(
 }
 
 export async function createProject(
-  input: CreateProjectInput
+  input: CreateProjectInput,
 ): Promise<CreateProjectResponse> {
   const res = await fetch(`/api/workspaces/${input.workspaceId}/projects`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      name: input.name,
+      workspaceId: input.workspaceId,
+      description: input.description,
+      endpointSlug: input.endpointSlug,
+    }),
   });
   if (!res.ok) throw new Error("Failed to create project");
   return res.json();
 }
 
-export async function getProject(projectId: string): Promise<GetProjectResponse> {
+export async function getProject(
+  projectId: string,
+): Promise<GetProjectResponse> {
   const res = await fetch(`/api/projects/${projectId}`);
   if (!res.ok) throw new Error("Failed to fetch project");
   return res.json();
@@ -30,8 +43,8 @@ export async function getProject(projectId: string): Promise<GetProjectResponse>
 
 export async function updateProject(
   projectId: string,
-  input: UpdateProjectInput
-): Promise<CreateProjectResponse> {
+  input: UpdateProjectInput,
+): Promise<GetProjectResponse> {
   const res = await fetch(`/api/projects/${projectId}`, {
     method: "PUT",
     headers: {
