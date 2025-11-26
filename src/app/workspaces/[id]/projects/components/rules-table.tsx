@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useRules, useDeleteRule, useUpdateRule } from "../../../../lib/hooks/rules";
 import { AddRuleDialog } from "./add-rule-dialog";
+import { EditRuleDialog } from "./edit-rule-dialog";
 
 interface RulesTableProps {
   projectId: string;
@@ -34,7 +35,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
     const message = childCount > 0
       ? `This rule has ${childCount} child rule(s). Deleting it will also delete all children. Continue?`
       : "Are you sure you want to delete this rule?";
-    
+
     if (confirm(message)) {
       try {
         await deleteRule.mutateAsync(rule.id);
@@ -132,6 +133,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
                 workspaceId={workspaceId}
               />
             )}
+            <EditRuleDialog ruleId={rule.id} />
             <Button
               variant="outline"
               size="sm"

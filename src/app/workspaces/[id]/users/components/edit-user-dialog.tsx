@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Role } from "@prisma/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UserWithPermissions } from "../../../lib/types/users";
+import { UserWithPermissions } from "@/src/app/lib/types/users";
 
 interface EditUserDialogProps {
   open: boolean;

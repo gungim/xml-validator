@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Role } from "@prisma/client";
 import { Edit, Trash2, Shield } from "lucide-react";
-import { UserWithPermissions } from "../../../lib/types/users";
+import { UserWithPermissions } from "@/src/app/lib/types/users";
 
 interface UserListProps {
   users: UserWithPermissions[];

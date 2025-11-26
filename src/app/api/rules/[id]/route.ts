@@ -1,6 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../lib/db";
 
+const VALID_DATA_TYPES = ["string", "number", "boolean", "object", "array"] as const;
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  try {
+    const rule = await prisma.rule.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        children: true,
+        parent: true,
+        globalRule: true,
+      },
+    });
+
+    if (!rule) {
+      return NextResponse.json(
+        { error: "Rule not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(rule);
+  } catch (error) {
+    console.error("Failed to fetch rule:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch rule" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -29,11 +64,81 @@ export async function PATCH(
   const body = await request.json();
 
   try {
+    // First fetch the existing rule to validate updates
+    const existingRule = await prisma.rule.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        children: true,
+        globalRule: true,
+      },
+    });
+
+    if (!existingRule) {
+      return NextResponse.json(
+        { error: "Rule not found" },
+        { status: 404 }
+      );
+    }
+
+    // Validate dataType changes
+    if (body.dataType && body.dataType !== existingRule.dataType) {
+      // Don't allow dataType changes if rule has children
+      if (existingRule.children && existingRule.children.length > 0) {
+        return NextResponse.json(
+          { error: "Cannot change data type of a rule with children" },
+          { status: 400 }
+        );
+      }
+
+      // Validate dataType value
+      if (!VALID_DATA_TYPES.includes(body.dataType as any)) {
+        return NextResponse.json(
+          { error: `Invalid data type. Must be one of: ${VALID_DATA_TYPES.join(", ")}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate global rule if provided
+    if (body.globalRuleId !== undefined && body.globalRuleId !== null) {
+      const globalRule = await prisma.globalRule.findUnique({
+        where: { id: body.globalRuleId },
+      });
+
+      if (!globalRule) {
+        return NextResponse.json(
+          { error: "Global rule not found" },
+          { status: 404 }
+        );
+      }
+
+      // Verify data type matches
+      const targetDataType = body.dataType || existingRule.dataType;
+      if (globalRule.dataType !== targetDataType) {
+        return NextResponse.json(
+          { error: `Data type mismatch. Global rule is ${globalRule.dataType}, but rule is ${targetDataType}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Build update data
+    const updateData: any = {};
+    
+    if (body.name !== undefined) updateData.name = body.name.trim();
+    if (body.path !== undefined) updateData.path = body.path.trim();
+    if (body.dataType !== undefined) updateData.dataType = body.dataType;
+    if (body.required !== undefined) updateData.required = body.required;
+    if (body.description !== undefined) updateData.description = body.description || null;
+    if (body.condition !== undefined) updateData.condition = body.condition;
+    if (body.globalRuleId !== undefined) updateData.globalRuleId = body.globalRuleId;
+
     const rule = await prisma.rule.update({
       where: { id: parseInt(id) },
-      data: {
-        globalRuleId: body.globalRuleId,
-        // Add other fields here as needed for future updates
+      data: updateData,
+      include: {
+        children: true,
+        globalRule: true,
       },
     });
 

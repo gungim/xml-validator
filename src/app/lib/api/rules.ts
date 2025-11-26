@@ -10,6 +10,12 @@ export async function getRules(projectId: string): Promise<GetRulesResponse> {
   return res.json();
 }
 
+export async function getRule(ruleId: number): Promise<any> {
+  const res = await fetch(`/api/rules/${ruleId}`);
+  if (!res.ok) throw new Error("Failed to fetch rule");
+  return res.json();
+}
+
 export async function createRule(
   input: CreateRuleInput
 ): Promise<CreateRuleResponse> {
@@ -34,7 +40,15 @@ export async function deleteRule(ruleId: number): Promise<{ success: boolean }> 
 
 export async function updateRule(
   ruleId: number,
-  data: { globalRuleId?: number | null }
+  data: {
+    name?: string;
+    path?: string;
+    dataType?: string;
+    required?: boolean;
+    description?: string | null;
+    condition?: any;
+    globalRuleId?: number | null;
+  }
 ): Promise<any> {
   const res = await fetch(`/api/rules/${ruleId}`, {
     method: "PATCH",

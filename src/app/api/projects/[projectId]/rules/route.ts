@@ -9,9 +9,9 @@ type DataTypeValue = typeof VALID_DATA_TYPES[number];
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ projectId: string }> }
 ): Promise<NextResponse<GetRulesResponse>> {
-  const { id: projectId } = await params;
+  const { projectId } = await params;
 
   const rules = await prisma.rule.findMany({
     where: { projectId },

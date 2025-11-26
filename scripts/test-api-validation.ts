@@ -47,7 +47,7 @@ async function main() {
   });
 
   // Mock params
-  const params = { params: { slug } };
+  const params = { params:  Promise.resolve({ slug })  };
   
   const validRes = await POST(validReq, params);
   const validData = await validRes.json();
@@ -77,7 +77,7 @@ async function main() {
     }),
   });
 
-  const invalidParams = { params: { slug: wrongSlug } };
+  const invalidParams = { params: Promise.resolve({ slug: wrongSlug }) };
 
   const invalidRes = await POST(invalidReq, invalidParams);
   const invalidData = await invalidRes.json();

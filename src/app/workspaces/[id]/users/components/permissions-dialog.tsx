@@ -9,7 +9,7 @@ import { Permission } from "@prisma/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
-import { UserWithPermissions } from "../../../lib/types/users";
+import { UserWithPermissions } from "@/src/app/lib/types/users";
 
 interface PermissionsDialogProps {
   open: boolean;

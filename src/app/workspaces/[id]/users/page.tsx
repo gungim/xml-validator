@@ -9,9 +9,9 @@ import { AddUserDialog } from "./components/add-user-dialog";
 import { EditUserDialog } from "./components/edit-user-dialog";
 import { DeleteUserDialog } from "./components/delete-user-dialog";
 import { PermissionsDialog } from "./components/permissions-dialog";
-import { UserWithPermissions } from "../../lib/types/users";
 import { Role } from "@prisma/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserWithPermissions } from "@/src/app/lib/types/users";
 
 export default function UsersPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -95,19 +95,19 @@ export default function UsersPage() {
       )}
 
       <AddUserDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
-      
+
       <EditUserDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         user={selectedUser}
       />
-      
+
       <DeleteUserDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         user={selectedUser}
       />
-      
+
       <PermissionsDialog
         open={permissionsDialogOpen}
         onOpenChange={setPermissionsDialogOpen}
