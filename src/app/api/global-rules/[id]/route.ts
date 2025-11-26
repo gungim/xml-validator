@@ -1,6 +1,6 @@
+import { prisma } from "@/src/app/lib/db";
+import { UpdateGlobalRuleInput } from "@/src/app/lib/types/global-rules";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../lib/db";
-import type { UpdateGlobalRuleInput } from "../../../../lib/types/global-rules";
 
 const VALID_DATA_TYPES = ["string", "number", "boolean", "object", "array"] as const;
 
