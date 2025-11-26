@@ -58,10 +58,14 @@ model GlobalRule {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   workspaceId String
+  parentId    Int?
   
-  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  appliedRules Rule[]    @relation("GlobalRuleApplication")
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  appliedRules Rule[]       @relation("GlobalRuleApplication")
+  parent       GlobalRule?  @relation("GlobalRuleHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children     GlobalRule[] @relation("GlobalRuleHierarchy")
 }
+
 
 enum DataType {
   string

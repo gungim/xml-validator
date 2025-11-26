@@ -13,6 +13,8 @@ export type GlobalRule = {
   createdAt: Date;
   updatedAt: Date;
   workspaceId: string;
+  parentId: number | null;
+  children?: GlobalRule[];
 };
 
 export type GetGlobalRulesResponse = GlobalRule[];
@@ -23,6 +25,7 @@ export type CreateGlobalRuleInput = {
   dataType: string;
   condition: RuleCondition;
   workspaceId: string;
+  parentId?: number;
 };
 
 export type UpdateGlobalRuleInput = {

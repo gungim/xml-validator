@@ -13,6 +13,9 @@ export async function GET(
 
   const globalRules = await prisma.globalRule.findMany({
     where: { workspaceId },
+    include: {
+      children: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -49,6 +52,44 @@ export async function POST(
     );
   }
 
+  // Validate parent if parentId is provided
+  if (body.parentId) {
+    const parent = await prisma.globalRule.findUnique({
+      where: { id: body.parentId },
+      include: { children: true },
+    });
+
+    if (!parent) {
+      return NextResponse.json(
+        { error: "Parent global rule not found" },
+        { status: 404 }
+      );
+    }
+
+    if (parent.workspaceId !== workspaceId) {
+      return NextResponse.json(
+        { error: "Parent global rule belongs to a different workspace" },
+        { status: 400 }
+      );
+    }
+
+    // Only object and array types can have children
+    if (parent.dataType !== "object" && parent.dataType !== "array") {
+      return NextResponse.json(
+        { error: "Only object and array global rules can have children" },
+        { status: 400 }
+      );
+    }
+
+    // Array rules can only have 1 child
+    if (parent.dataType === "array" && parent.children.length >= 1) {
+      return NextResponse.json(
+        { error: "Array global rules can only have 1 child" },
+        { status: 400 }
+      );
+    }
+  }
+
   // Check for duplicate name within workspace
   const existing = await prisma.globalRule.findFirst({
     where: {
@@ -71,6 +112,7 @@ export async function POST(
       dataType: body.dataType as any,
       condition: body.condition || {},
       workspaceId,
+      parentId: body.parentId || null,
     },
   });
 

@@ -9,14 +9,29 @@ interface GlobalRulesTableProps {
   workspaceId: string;
 }
 
+interface GlobalRule {
+  id: number;
+  name: string;
+  description: string | null;
+  dataType: string;
+  condition: any;
+  createdAt: Date;
+  updatedAt: Date;
+  workspaceId: string;
+  parentId: number | null;
+  children?: GlobalRule[];
+}
+
 export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
   const { data: globalRules, isLoading } = useGlobalRules(workspaceId);
   const deleteGlobalRule = useDeleteGlobalRule();
 
-  const handleDelete = async (globalRule: any) => {
-    // TODO: Query count of rules using this global rule
-    const message = "Are you sure you want to delete this global rule? Rules using it will lose this reference.";
-    
+  const handleDelete = async (globalRule: GlobalRule) => {
+    const childCount = globalRule.children?.length || 0;
+    const message = childCount > 0
+      ? `This global rule has ${childCount} child rule(s). Deleting it will also delete all children. Continue?`
+      : "Are you sure you want to delete this global rule? Rules using it will lose this reference.";
+
     if (confirm(message)) {
       try {
         await deleteGlobalRule.mutateAsync(globalRule.id);
@@ -30,7 +45,10 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
     return <div>Loading global rules...</div>;
   }
 
-  if (!globalRules || globalRules.length === 0) {
+  // Filter to get only top-level global rules (no parent)
+  const topLevelGlobalRules = globalRules?.filter(r => r.parentId === null) || [];
+
+  if (topLevelGlobalRules.length === 0) {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -43,6 +61,98 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
       </div>
     );
   }
+
+  const canHaveChildren = (dataType: string) => {
+    return dataType === "object" || dataType === "array";
+  };
+
+  const getConditionSummary = (globalRule: GlobalRule) => {
+    const condition = globalRule.condition as any;
+    let conditionSummary = "-";
+
+    if (globalRule.dataType === "string") {
+      const parts = [];
+      if (condition.minLength) parts.push(`min: ${condition.minLength}`);
+      if (condition.maxLength) parts.push(`max: ${condition.maxLength}`);
+      if (condition.pattern) parts.push("pattern");
+      if (condition.allowEmpty === false) parts.push("no empty");
+      conditionSummary = parts.join(", ") || "-";
+    } else if (globalRule.dataType === "number") {
+      const parts = [];
+      if (condition.min !== undefined) parts.push(`min: ${condition.min}`);
+      if (condition.max !== undefined) parts.push(`max: ${condition.max}`);
+      conditionSummary = parts.join(", ") || "-";
+    }
+
+    return conditionSummary;
+  };
+
+  const renderGlobalRule = (globalRule: GlobalRule, level: number = 0): React.ReactElement[] => {
+    // Find children from the full array instead of relying on globalRule.children
+    const children = globalRules?.filter(r => r.parentId === globalRule.id) || [];
+    const hasChildren = children.length > 0;
+    const indent = level * 32; // 32px per level
+
+    const rows: React.ReactElement[] = [];
+
+    // Add the current global rule row
+    rows.push(
+      <tr key={globalRule.id} className="border-b hover:bg-gray-50">
+        <td className="px-4 py-3" style={{ paddingLeft: `${indent + 16}px` }}>
+          <div className="flex items-center gap-2">
+            {level > 0 && (
+              <span className="text-gray-400">└─</span>
+            )}
+            <span className="font-medium">{globalRule.name}</span>
+          </div>
+        </td>
+        <td className="px-4 py-3 text-gray-600">
+          {globalRule.description || "-"}
+        </td>
+        <td className="px-4 py-3">
+          <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+            {globalRule.dataType}
+          </code>
+        </td>
+        <td className="px-4 py-3 text-sm text-gray-600">
+          {getConditionSummary(globalRule)}
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex gap-2">
+            {canHaveChildren(globalRule.dataType) && (
+              <AddGlobalRuleDialog
+                workspaceId={workspaceId}
+                parentId={globalRule.id}
+                parentDataType={globalRule.dataType as "object" | "array"}
+              />
+            )}
+            <EditGlobalRuleDialog
+              globalRule={globalRule}
+              workspaceId={workspaceId}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDelete(globalRule)}
+              disabled={deleteGlobalRule.isPending}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              Delete
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
+
+    // Add children rows recursively
+    if (hasChildren) {
+      children.forEach(child => {
+        rows.push(...renderGlobalRule(child, level + 1));
+      });
+    }
+
+    return rows;
+  };
 
   return (
     <div className="space-y-4">
@@ -63,58 +173,7 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
             </tr>
           </thead>
           <tbody>
-            {globalRules.map((globalRule) => {
-              const condition = globalRule.condition as any;
-              let conditionSummary = "-";
-              
-              if (globalRule.dataType === "string") {
-                const parts = [];
-                if (condition.minLength) parts.push(`min: ${condition.minLength}`);
-                if (condition.maxLength) parts.push(`max: ${condition.maxLength}`);
-                if (condition.pattern) parts.push("pattern");
-                if (condition.allowEmpty === false) parts.push("no empty");
-                conditionSummary = parts.join(", ") || "-";
-              } else if (globalRule.dataType === "number") {
-                const parts = [];
-                if (condition.min !== undefined) parts.push(`min: ${condition.min}`);
-                if (condition.max !== undefined) parts.push(`max: ${condition.max}`);
-                conditionSummary = parts.join(", ") || "-";
-              }
-
-              return (
-                <tr key={globalRule.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{globalRule.name}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {globalRule.description || "-"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                      {globalRule.dataType}
-                    </code>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {conditionSummary}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <EditGlobalRuleDialog
-                        globalRule={globalRule}
-                        workspaceId={workspaceId}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(globalRule)}
-                        disabled={deleteGlobalRule.isPending}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {topLevelGlobalRules.map(globalRule => renderGlobalRule(globalRule))}
           </tbody>
         </table>
       </div>

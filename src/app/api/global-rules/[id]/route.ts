@@ -17,6 +17,7 @@ export async function PUT(
     where: { id: globalRuleId },
     include: {
       appliedRules: true, // Include to show count in warning
+      children: true,
     },
   });
 
@@ -33,6 +34,16 @@ export async function PUT(
       { error: `Invalid data type. Must be one of: ${VALID_DATA_TYPES.join(", ")}` },
       { status: 400 }
     );
+  }
+
+  // Validate dataType changes - don't allow if has children
+  if (body.dataType && body.dataType !== existing.dataType) {
+    if (existing.children && existing.children.length > 0) {
+      return NextResponse.json(
+        { error: "Cannot change data type of a global rule with children" },
+        { status: 400 }
+      );
+    }
   }
 
   // Check for duplicate name if name is being changed

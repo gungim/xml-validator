@@ -24,12 +24,14 @@ const globalRuleSchema = z.object({
 
 interface AddGlobalRuleDialogProps {
   workspaceId: string;
+  parentId?: number;
+  parentDataType?: "object" | "array";
 }
 
-export function AddGlobalRuleDialog({ workspaceId }: AddGlobalRuleDialogProps) {
+export function AddGlobalRuleDialog({ workspaceId, parentId, parentDataType }: AddGlobalRuleDialogProps) {
   const [open, setOpen] = useState(false);
   const createGlobalRule = useCreateGlobalRule();
-  
+
   const dataTypes = ["string", "number", "boolean", "object", "array"];
 
   // Condition state
@@ -68,6 +70,7 @@ export function AddGlobalRuleDialog({ workspaceId }: AddGlobalRuleDialogProps) {
           dataType: value.dataType,
           condition,
           workspaceId,
+          parentId,
         });
         setOpen(false);
         form.reset();
@@ -80,17 +83,37 @@ export function AddGlobalRuleDialog({ workspaceId }: AddGlobalRuleDialogProps) {
   });
 
   const currentDataType = form.state.values.dataType;
+  const isChildRule = parentId !== undefined;
+
+  const buttonLabel = isChildRule ? (
+    <span className="text-sm">+ Child</span>
+  ) : (
+    "Add Global Rule"
+  );
+
+  const dialogTitle = isChildRule ? "Add Child Global Rule" : "Add Global Rule";
+  const dialogDescription = isChildRule
+    ? (parentDataType === "array"
+      ? "Add a child global rule for array items (max 1 allowed)."
+      : "Add a child global rule for this object field.")
+    : "Create a reusable validation rule template for this workspace.";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Global Rule</Button>
+        {isChildRule ? (
+          <Button variant="outline" size="sm">
+            {buttonLabel}
+          </Button>
+        ) : (
+          <Button>{buttonLabel}</Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Global Rule</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
-            Create a reusable validation rule template for this workspace.
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -198,7 +221,7 @@ export function AddGlobalRuleDialog({ workspaceId }: AddGlobalRuleDialogProps) {
           {currentDataType === "string" && (
             <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
               <h4 className="font-medium text-sm">String Validation</h4>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="minLength">Min Length</Label>
@@ -215,7 +238,7 @@ export function AddGlobalRuleDialog({ workspaceId }: AddGlobalRuleDialogProps) {
                     disabled={createGlobalRule.isPending}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="maxLength">Max Length</Label>
                   <Input
@@ -270,7 +293,7 @@ export function AddGlobalRuleDialog({ workspaceId }: AddGlobalRuleDialogProps) {
           {currentDataType === "number" && (
             <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
               <h4 className="font-medium text-sm">Number Validation</h4>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="min">Min Value</Label>
@@ -286,7 +309,7 @@ export function AddGlobalRuleDialog({ workspaceId }: AddGlobalRuleDialogProps) {
                     disabled={createGlobalRule.isPending}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="max">Max Value</Label>
                   <Input
