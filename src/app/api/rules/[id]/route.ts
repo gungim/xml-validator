@@ -133,6 +133,42 @@ export async function PATCH(
     if (body.condition !== undefined) updateData.condition = body.condition;
     if (body.globalRuleId !== undefined) updateData.globalRuleId = body.globalRuleId;
 
+    // If path is changing and rule has children (object/array), update children paths
+    if (body.path && body.path !== existingRule.path && existingRule.children && existingRule.children.length > 0) {
+      const oldPath = existingRule.path;
+      const newPath = body.path.trim();
+
+      // Recursive function to update child paths
+      async function updateChildrenPaths(parentId: number, oldParentPath: string, newParentPath: string) {
+        const children = await prisma.rule.findMany({
+          where: { parentId },
+          include: { children: true },
+        });
+
+        for (const child of children) {
+          // Replace the old parent path prefix with the new one
+          let newChildPath = child.path;
+          if (child.path.startsWith(oldParentPath + ".")) {
+            newChildPath = child.path.replace(oldParentPath + ".", newParentPath + ".");
+          }
+
+          // Update child path
+          await prisma.rule.update({
+            where: { id: child.id },
+            data: { path: newChildPath },
+          });
+
+          // Recursively update grandchildren if any
+          if (child.children && child.children.length > 0) {
+            await updateChildrenPaths(child.id, child.path, newChildPath);
+          }
+        }
+      }
+
+      // Update all descendants
+      await updateChildrenPaths(parseInt(id), oldPath, newPath);
+    }
+
     const rule = await prisma.rule.update({
       where: { id: parseInt(id) },
       data: updateData,

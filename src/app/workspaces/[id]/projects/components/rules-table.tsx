@@ -75,7 +75,9 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
   };
 
   const renderRule = (rule: Rule, level: number = 0): React.ReactElement[] => {
-    const hasChildren = rule.children && rule.children.length > 0;
+    // Find children from the full rules array instead of relying on rule.children
+    const children = rules?.filter(r => r.parentId === rule.id) || [];
+    const hasChildren = children.length > 0;
     const indent = level * 32; // 32px per level
 
     const rows: React.ReactElement[] = [];
@@ -150,7 +152,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
 
     // Add children rows recursively
     if (hasChildren) {
-      rule.children!.forEach(child => {
+      children.forEach(child => {
         rows.push(...renderRule(child, level + 1));
       });
     }
