@@ -1,0 +1,45 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model Workspace {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projects  Project[] // Quan hệ 1-n
+}
+
+model Project {
+  id           String     @id @default(cuid())
+  name         String
+  description  String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id])
+  workspaceId  String
+
+  rules        Rule[]     // Quan hệ 1-n
+}
+
+model Rule {
+  id          Int      @id @default(autoincrement())
+  name        String
+	path				String
+	required    Boolean
+	dataType   String
+  description String?
+  condition 	Json     // Lưu rule JSON
+  createdAt   DateTime @default(now())
+
+  project     Project   @relation(fields: [projectId], references: [id])
+  projectId   String
+}
