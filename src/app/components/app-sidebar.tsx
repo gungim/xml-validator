@@ -1,16 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, FolderKanban, Users } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { FolderKanban, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useWorkspaces } from "../lib/hooks/workspaces";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Extract workspaceId from pathname (e.g., /workspaces/123/... -> 123)
   const workspaceIdMatch = pathname.match(/\/workspaces\/([^\/]+)/);
   const workspaceId = workspaceIdMatch ? workspaceIdMatch[1] : null;
+
+  // Fetch workspaces
+  const { data: workspaces, isLoading } = useWorkspaces();
+
+  // Find current workspace
+  const currentWorkspace = workspaces?.find((ws: any) => ws.id === workspaceId);
 
   const navigation = [
     {
@@ -23,14 +32,42 @@ export function AppSidebar() {
       name: "Users",
       href: workspaceId ? `/workspaces/${workspaceId}/users` : "#",
       icon: Users,
+      disabled: !workspaceId,
     },
   ];
 
+  const handleWorkspaceChange = (selectedWorkspaceId: string) => {
+    router.push(`/workspaces/${selectedWorkspaceId}/projects`);
+  };
+
   return (
     <div className="flex h-screen w-64 flex-col border-r bg-gray-50/40">
-      {/* Logo/Brand */}
-      <div className="flex h-16 items-center border-b px-6">
-        <h1 className="text-xl font-bold">XML Validator</h1>
+      {/* Workspace Selector */}
+      <div className="flex h-16 items-center border-b px-4">
+        <Select
+          value={workspaceId || ""}
+          onValueChange={handleWorkspaceChange}
+          disabled={isLoading}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={isLoading ? "Loading..." : "Select workspace"}>
+              {currentWorkspace ? currentWorkspace.name : "Select workspace"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {workspaces && workspaces.length > 0 ? (
+              workspaces.map((workspace: any) => (
+                <SelectItem key={workspace.id} value={workspace.id}>
+                  {workspace.name}
+                </SelectItem>
+              ))
+            ) : (
+              <div className="p-2 text-sm text-muted-foreground">
+                No workspaces available
+              </div>
+            )}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Navigation */}
