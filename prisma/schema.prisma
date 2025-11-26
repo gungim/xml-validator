@@ -8,12 +8,13 @@ datasource db {
 }
 
 model Workspace {
-  id          String        @id @default(cuid())
-  name        String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  projects    Project[]
-  globalRules GlobalRule[]
+  id              String           @id @default(cuid())
+  name            String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  projects        Project[]
+  globalRules     GlobalRule[]
+  userPermissions UserPermission[]
 }
 
 model Project {
@@ -66,4 +67,37 @@ enum DataType {
   boolean
   object
   array
+}
+
+model User {
+  id          String           @id @default(cuid())
+  name        String
+  email       String           @unique
+  role        Role             @default(USER)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  permissions UserPermission[]
+}
+
+model UserPermission {
+  id          String     @id @default(cuid())
+  userId      String
+  workspaceId String
+  permission  Permission
+  createdAt   DateTime   @default(now())
+  
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, workspaceId])
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Permission {
+  READ
+  EDIT
 }
