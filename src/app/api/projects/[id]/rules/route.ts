@@ -15,6 +15,7 @@ export async function GET(
     where: { projectId },
     include: {
       children: true,
+      globalRule: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -97,6 +98,28 @@ export async function POST(
     }
   }
 
+  // Validate global rule if globalRuleId is provided
+  if (body.globalRuleId) {
+    const globalRule = await prisma.globalRule.findUnique({
+      where: { id: body.globalRuleId },
+    });
+
+    if (!globalRule) {
+      return NextResponse.json(
+        { error: "Global rule not found" },
+        { status: 404 }
+      );
+    }
+    
+    // Verify data type matches
+    if (globalRule.dataType !== body.dataType) {
+      return NextResponse.json(
+        { error: `Data type mismatch. Global rule is ${globalRule.dataType}, but rule is ${body.dataType}` },
+        { status: 400 }
+      );
+    }
+  }
+
   const rule = await prisma.rule.create({
     data: {
       name: body.name.trim(),
@@ -107,6 +130,7 @@ export async function POST(
       condition: body.condition || {},
       projectId,
       parentId: body.parentId || null,
+      globalRuleId: body.globalRuleId || null,
     },
   });
 

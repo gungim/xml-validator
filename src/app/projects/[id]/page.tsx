@@ -15,6 +15,7 @@ export default async function ProjectDetailPage({
     where: { id },
     include: {
       rules: true,
+      workspace: true, // Include to get workspaceId
     },
   });
 
@@ -45,11 +46,11 @@ export default async function ProjectDetailPage({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Rules</h2>
-          <AddRuleDialog projectId={id} />
+          <AddRuleDialog projectId={id} workspaceId={project.workspaceId} />
         </div>
 
         <div className="bg-white rounded-lg border">
-          <RulesTable projectId={id} />
+          <RulesTable projectId={id} workspaceId={project.workspaceId} />
         </div>
       </div>
     </div>

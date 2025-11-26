@@ -8,11 +8,12 @@ datasource db {
 }
 
 model Workspace {
-  id        String    @id @default(cuid())
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  projects  Project[]
+  id          String        @id @default(cuid())
+  name        String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  projects    Project[]
+  globalRules GlobalRule[]
 }
 
 model Project {
@@ -37,10 +38,26 @@ model Rule {
   projectId   String
   required    Boolean
   parentId    Int?
+  globalRuleId Int?
   
-  parent      Rule?    @relation("RuleHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children    Rule[]   @relation("RuleHierarchy")
-  project     Project  @relation(fields: [projectId], references: [id])
+  parent      Rule?       @relation("RuleHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Rule[]      @relation("RuleHierarchy")
+  project     Project     @relation(fields: [projectId], references: [id])
+  globalRule  GlobalRule? @relation("GlobalRuleApplication", fields: [globalRuleId], references: [id], onDelete: SetNull)
+}
+
+model GlobalRule {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  dataType    DataType
+  condition   Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  workspaceId String
+  
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  appliedRules Rule[]    @relation("GlobalRuleApplication")
 }
 
 enum DataType {

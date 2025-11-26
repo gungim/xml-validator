@@ -31,3 +31,18 @@ export async function deleteRule(ruleId: number): Promise<{ success: boolean }> 
   if (!res.ok) throw new Error("Failed to delete rule");
   return res.json();
 }
+
+export async function updateRule(
+  ruleId: number,
+  data: { globalRuleId?: number | null }
+): Promise<any> {
+  const res = await fetch(`/api/rules/${ruleId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to update rule");
+  return res.json();
+}

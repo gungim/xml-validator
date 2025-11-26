@@ -1,6 +1,7 @@
 import NotFound from "../../components/not-found";
 import { prisma } from "../../lib/db";
 import ProjectList from "../components/project-list";
+import { GlobalRulesTable } from "../components/global-rules-table";
 
 export default async function WorkspaceDetailPage({
   params,
@@ -11,14 +12,29 @@ export default async function WorkspaceDetailPage({
 
   const workspace = await prisma.workspace.findUnique({
     where: { id },
-    include: { projects: true }, // lấy kèm projects
   });
-  if (!workspace) return <NotFound />;
-  return (
-    <div>
-      <span>{workspace.name}</span>
 
-      <ProjectList workspace_id={id} />
+  if (!workspace) {
+    return <NotFound />;
+  }
+
+  return (
+    <div className="container mx-auto p-6 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold">{workspace.name}</h1>
+        <p className="text-gray-500 mt-1">
+          Created {workspace.createdAt.toLocaleDateString()}
+        </p>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Projects</h2>
+        <ProjectList workspace_id={id} />
+      </div>
+
+      <div className="border-t pt-8">
+        <GlobalRulesTable workspaceId={id} />
+      </div>
     </div>
   );
 }

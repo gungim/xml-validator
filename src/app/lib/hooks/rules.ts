@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getRules, createRule, deleteRule } from "../api/rules";
+import { getRules, createRule, deleteRule, updateRule } from "../api/rules";
 import { CreateRuleInput } from "../types/rules";
 
 export function useRules(projectId: string) {
@@ -30,6 +30,20 @@ export function useDeleteRule() {
     mutationFn: (ruleId: number) => deleteRule(ruleId),
     onSuccess: () => {
       // Invalidate all rules queries to refresh the list
+      queryClient.invalidateQueries({
+        queryKey: ["rules"],
+      });
+    },
+  });
+}
+
+export function useUpdateRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { globalRuleId?: number | null } }) => 
+      updateRule(id, data),
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["rules"],
       });

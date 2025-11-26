@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useRules, useDeleteRule } from "../../lib/hooks/rules";
+import { useRules, useDeleteRule, useUpdateRule } from "../../lib/hooks/rules";
 import { AddRuleDialog } from "./add-rule-dialog";
 
 interface RulesTableProps {
   projectId: string;
+  workspaceId: string;
 }
 
 interface Rule {
@@ -17,11 +18,16 @@ interface Rule {
   description: string | null;
   parentId: number | null;
   children?: Rule[];
+  globalRule?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
-export function RulesTable({ projectId }: RulesTableProps) {
+export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
   const { data: rules, isLoading } = useRules(projectId);
   const deleteRule = useDeleteRule();
+  const updateRule = useUpdateRule();
 
   const handleDelete = async (rule: Rule) => {
     const childCount = rule.children?.length || 0;
@@ -34,6 +40,16 @@ export function RulesTable({ projectId }: RulesTableProps) {
         await deleteRule.mutateAsync(rule.id);
       } catch (error) {
         console.error("Failed to delete rule:", error);
+      }
+    }
+  };
+
+  const handleDetachGlobalRule = async (rule: Rule) => {
+    if (confirm(`Are you sure you want to detach the global rule "${rule.globalRule?.name}"? This will convert it to a custom rule.`)) {
+      try {
+        await updateRule.mutateAsync({ id: rule.id, data: { globalRuleId: null } });
+      } catch (error) {
+        console.error("Failed to detach global rule:", error);
       }
     }
   };
@@ -71,7 +87,23 @@ export function RulesTable({ projectId }: RulesTableProps) {
             {level > 0 && (
               <span className="text-gray-400">└─</span>
             )}
-            {rule.name}
+            <div className="flex flex-col">
+              <span>{rule.name}</span>
+              {rule.globalRule && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-1">
+                    🌐 {rule.globalRule.name}
+                  </span>
+                  <button
+                    onClick={() => handleDetachGlobalRule(rule)}
+                    className="text-xs text-gray-400 hover:text-red-500 underline"
+                    disabled={updateRule.isPending}
+                  >
+                    Detach
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </td>
         <td className="px-4 py-3 font-mono text-sm">{rule.path}</td>
@@ -97,6 +129,7 @@ export function RulesTable({ projectId }: RulesTableProps) {
                 projectId={projectId}
                 parentId={rule.id}
                 parentDataType={rule.dataType as "object" | "array"}
+                workspaceId={workspaceId}
               />
             )}
             <Button
