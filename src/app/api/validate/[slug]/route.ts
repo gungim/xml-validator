@@ -7,9 +7,10 @@ const API_KEY_HEADER = "x-api-key";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } },
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
+    const {slug} = await params;
     const apiKey = request.headers.get(API_KEY_HEADER);
     if (!apiKey) {
       return NextResponse.json(
@@ -19,7 +20,7 @@ export async function POST(
     }
 
     const project = await prisma.project.findUnique({
-      where: { endpointSlug: params.slug },
+      where: { endpointSlug: slug },
       select: { id: true, endpointSecret: true },
     });
 

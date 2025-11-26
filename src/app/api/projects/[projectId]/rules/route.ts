@@ -27,9 +27,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { id: projectId } = await params;
+  const { projectId } = await params;
+  console.log(projectId);
   const body: CreateRuleInput = await request.json();
 
   // Basic validation
