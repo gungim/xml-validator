@@ -59,17 +59,18 @@ export interface GetUserResponse {
 // Zod validation schemas
 export const createUserSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  email: z.string().email("Invalid email address"),
-  role: z.nativeEnum(Role),
+  email: z.email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
+  role: z.enum(Role),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  email: z.string().email().optional(),
-  role: z.nativeEnum(Role).optional(),
+  email: z.email().optional(),
+  role: z.enum(Role).optional(),
 });
 
 export const assignPermissionSchema = z.object({
   workspaceId: z.string().min(1, "Workspace ID is required"),
-  permission: z.nativeEnum(Permission),
+  permission: z.enum(Permission),
 });
