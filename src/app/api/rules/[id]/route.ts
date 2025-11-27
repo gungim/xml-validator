@@ -80,6 +80,36 @@ export async function PATCH(
       );
     }
 
+    // Prevent editing if rule is linked to a global rule (except for detaching)
+    if (existingRule.globalRuleId) {
+      // Allow only detaching (setting globalRuleId to null)
+      const isDetaching = body.globalRuleId === null;
+      const hasOtherEdits = Object.keys(body).some(
+        key => key !== 'globalRuleId' && body[key] !== undefined
+      );
+
+      if (hasOtherEdits && !isDetaching) {
+        return NextResponse.json(
+          { error: "Cannot edit rules linked to global rules. Detach from global rule first or edit the global rule itself." },
+          { status: 400 }
+        );
+      }
+
+      // If detaching, allow it
+      if (isDetaching) {
+        // Just update globalRuleId and nothing else for now
+        const updated = await prisma.rule.update({
+          where: { id: parseInt(id) },
+          data: { globalRuleId: null },
+          include: {
+            children: true,
+            globalRule: true,
+          },
+        });
+        return NextResponse.json(updated);
+      }
+    }
+
     // Validate dataType changes
     if (body.dataType && body.dataType !== existingRule.dataType) {
       // Don't allow dataType changes if rule has children

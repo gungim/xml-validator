@@ -172,8 +172,14 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                         )}
 
                         {isLinkedToGlobalRule && (
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                                🌐 This rule is linked to global rule "{rule.globalRule.name}". You can edit it, but it's recommended to keep the validation consistent.
+                            <div className="p-3 bg-orange-50 border border-orange-300 rounded text-sm text-orange-900">
+                                🌐 This rule is linked to global rule "{rule.globalRule.name}".
+                                <br />
+                                <strong>Editing is disabled.</strong> To modify, either:
+                                <ul className="list-disc ml-5 mt-1">
+                                    <li>Detach from global rule using the "Detach" button in the rules table</li>
+                                    <li>Edit the global rule itself (changes will cascade to all linked rules)</li>
+                                </ul>
                             </div>
                         )}
 
@@ -199,7 +205,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                         onBlur={field.handleBlur}
                                         onChange={(e) => field.handleChange(e.target.value)}
                                         placeholder="Enter rule name"
-                                        disabled={updateRule.isPending}
+                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
                                     />
                                     {field.state.meta.errors.length > 0 && (
                                         <p className="text-sm text-red-500">
@@ -232,7 +238,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                         onBlur={field.handleBlur}
                                         onChange={(e) => field.handleChange(e.target.value)}
                                         placeholder="e.g., user.email"
-                                        disabled={updateRule.isPending}
+                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
                                     />
                                     {field.state.meta.errors.length > 0 && (
                                         <p className="text-sm text-red-500">
@@ -266,7 +272,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                             setStringCondition({ allowEmpty: true });
                                             setNumberCondition({});
                                         }}
-                                        disabled={updateRule.isPending || !canChangeDataType}
+                                        disabled={updateRule.isPending || !canChangeDataType || isLinkedToGlobalRule}
                                     >
                                         <SelectTrigger id={field.name} className="w-full">
                                             <SelectValue />
@@ -297,7 +303,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                         name={field.name}
                                         checked={field.state.value}
                                         onChange={(e) => field.handleChange(e.target.checked)}
-                                        disabled={updateRule.isPending}
+                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
                                         className="h-4 w-4"
                                     />
                                     <Label htmlFor={field.name} className="cursor-pointer">
@@ -317,7 +323,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                         value={field.state.value}
                                         onChange={(e) => field.handleChange(e.target.value)}
                                         placeholder="Optional description"
-                                        disabled={updateRule.isPending}
+                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
                                     />
                                 </div>
                             )}
@@ -341,7 +347,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                                 minLength: e.target.value ? Number(e.target.value) : undefined
                                             })}
                                             placeholder="e.g., 5"
-                                            disabled={updateRule.isPending}
+                                            disabled={updateRule.isPending || isLinkedToGlobalRule}
                                         />
                                     </div>
 
@@ -357,7 +363,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                                 maxLength: e.target.value ? Number(e.target.value) : undefined
                                             })}
                                             placeholder="e.g., 255"
-                                            disabled={updateRule.isPending}
+                                            disabled={updateRule.isPending || isLinkedToGlobalRule}
                                         />
                                     </div>
                                 </div>
@@ -372,7 +378,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                             pattern: e.target.value || undefined
                                         })}
                                         placeholder="e.g., ^[a-zA-Z0-9]+$"
-                                        disabled={updateRule.isPending}
+                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
                                     />
                                 </div>
 
@@ -385,7 +391,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                             ...stringCondition,
                                             allowEmpty: e.target.checked
                                         })}
-                                        disabled={updateRule.isPending}
+                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
                                         className="h-4 w-4"
                                     />
                                     <Label htmlFor="allowEmpty" className="cursor-pointer">
@@ -412,7 +418,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                                 min: e.target.value ? Number(e.target.value) : undefined
                                             })}
                                             placeholder="e.g., 0"
-                                            disabled={updateRule.isPending}
+                                            disabled={updateRule.isPending || isLinkedToGlobalRule}
                                         />
                                     </div>
 
@@ -427,7 +433,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                                                 max: e.target.value ? Number(e.target.value) : undefined
                                             })}
                                             placeholder="e.g., 100"
-                                            disabled={updateRule.isPending}
+                                            disabled={updateRule.isPending || isLinkedToGlobalRule}
                                         />
                                     </div>
                                 </div>
@@ -455,7 +461,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={updateRule.isPending}>
+                            <Button type="submit" disabled={updateRule.isPending || isLinkedToGlobalRule}>
                                 {updateRule.isPending ? "Updating..." : "Update Rule"}
                             </Button>
                         </div>

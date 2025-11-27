@@ -74,6 +74,30 @@ export async function PUT(
     },
   });
 
+  // Cascade updates to all linked rules
+  // Find all rules using this global rule
+  const linkedRules = await prisma.rule.findMany({
+    where: { globalRuleId: globalRuleId },
+  });
+
+  // Update each linked rule
+  for (const linkedRule of linkedRules) {
+    const updateData: any = {
+      name: body.name?.trim() ?? linkedRule.name,
+      description: body.description ?? linkedRule.description,
+      dataType: (body.dataType as any) ?? linkedRule.dataType,
+    };
+    
+    if (body.condition !== undefined) {
+      updateData.condition = body.condition;
+    }
+
+    await prisma.rule.update({
+      where: { id: linkedRule.id },
+      data: updateData,
+    });
+  }
+
   return NextResponse.json(updated);
 }
 

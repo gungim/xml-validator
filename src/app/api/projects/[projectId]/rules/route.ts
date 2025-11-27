@@ -105,6 +105,17 @@ export async function POST(
   if (body.globalRuleId) {
     const globalRule = await prisma.globalRule.findUnique({
       where: { id: body.globalRuleId },
+      include: {
+        children: {
+          include: {
+            children: {
+              include: {
+                children: true, // Support up to 3 levels deep
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!globalRule) {
@@ -121,8 +132,48 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    // Recursive function to create rule with children
+    async function createRuleWithChildren(
+      globalRuleData: any,
+      parentRuleId: number | null,
+      parentPath: string
+    ): Promise<any> {
+      // Create the rule
+      const createdRule = await prisma.rule.create({
+        data: {
+          name: globalRuleData.name,
+          path: parentRuleId ? `${parentPath}.${globalRuleData.name}` : body.path.trim(),
+          required: body.required ?? false,
+          dataType: globalRuleData.dataType,
+          description: globalRuleData.description,
+          condition: globalRuleData.condition,
+          projectId,
+          parentId: parentRuleId,
+          globalRuleId: globalRuleData.id,
+        },
+      });
+
+      // Recursively create children if any
+      if (globalRuleData.children && globalRuleData.children.length > 0) {
+        for (const childGlobalRule of globalRuleData.children) {
+          await createRuleWithChildren(
+            childGlobalRule,
+            createdRule.id,
+            createdRule.path
+          );
+        }
+      }
+
+      return createdRule;
+    }
+
+    // Create rule and all children recursively
+    const rule = await createRuleWithChildren(globalRule, body.parentId || null, body.path);
+    return NextResponse.json(rule);
   }
 
+  // Normal rule creation without global rule
   const rule = await prisma.rule.create({
     data: {
       name: body.name.trim(),
@@ -133,7 +184,7 @@ export async function POST(
       condition: body.condition || {},
       projectId,
       parentId: body.parentId || null,
-      globalRuleId: body.globalRuleId || null,
+      globalRuleId: null,
     },
   });
 

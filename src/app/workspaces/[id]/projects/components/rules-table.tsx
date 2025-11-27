@@ -22,11 +22,13 @@ interface Rule {
   globalRule?: {
     id: number;
     name: string;
+    parentId: number | null;
   } | null;
 }
 
 export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
   const { data: rules, isLoading } = useRules(projectId);
+  console.log(rules)
   const deleteRule = useDeleteRule();
   const updateRule = useUpdateRule();
 
@@ -97,13 +99,15 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
                   <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-1">
                     🌐 {rule.globalRule.name}
                   </span>
-                  <button
-                    onClick={() => handleDetachGlobalRule(rule)}
-                    className="text-xs text-gray-400 hover:text-red-500 underline"
-                    disabled={updateRule.isPending}
-                  >
-                    Detach
-                  </button>
+                  {!rule.globalRule.parentId && (
+                    <button
+                      onClick={() => handleDetachGlobalRule(rule)}
+                      className="text-xs text-gray-400 hover:text-red-500 underline"
+                      disabled={updateRule.isPending}
+                    >
+                      Detach
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -127,7 +131,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
         </td>
         <td className="px-4 py-3">
           <div className="flex gap-2">
-            {canHaveChildren(rule.dataType) && (
+            {canHaveChildren(rule.dataType) && !rule.globalRule && (
               <AddRuleDialog
                 projectId={projectId}
                 parentId={rule.id}
@@ -135,16 +139,25 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
                 workspaceId={workspaceId}
               />
             )}
-            <EditRuleDialog ruleId={rule.id} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDelete(rule)}
-              disabled={deleteRule.isPending}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              Delete
-            </Button>
+            {!rule.globalRule && (
+              <>
+                <EditRuleDialog ruleId={rule.id} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDelete(rule)}
+                  disabled={deleteRule.isPending}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Delete
+                </Button>
+              </>
+            )}
+            {rule.globalRule && (
+              <span className="text-xs text-gray-500 italic">
+                Linked to global rule
+              </span>
+            )}
           </div>
         </td>
       </tr>
