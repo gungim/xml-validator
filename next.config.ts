@@ -3,10 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-  experimental: {
-    serverComponentsExternalPackages: ["@prisma/client"]
-  }
-
+  serverExternalPackages: ["@prisma/client", "bcryptjs"],
+  output: "standalone",
 };
 
 export default nextConfig;
