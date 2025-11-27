@@ -1,15 +1,17 @@
-import { prisma } from "../../../../lib/db";
-import { AddRuleDialog } from "../components/add-rule-dialog";
-import NotFound from "../../../../components/not-found";
-import { EditProjectDialog } from "../components/edit-project-dialog";
-import { RulesTable } from "../components/rules-table";
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import NotFound from '../../../../components/not-found'
+import { prisma } from '../../../../lib/db'
+import { AddRuleDialog } from '../components/add-rule-dialog'
+import { EditProjectDialog } from '../components/edit-project-dialog'
+import { RulesTable } from '../components/rules-table'
 
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: Promise<{ projectId: string }>;
+  params: Promise<{ projectId: string }>
 }) {
-  const { projectId } = await params;
+  const { projectId } = await params
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
@@ -17,10 +19,10 @@ export default async function ProjectDetailPage({
       rules: true,
       workspace: true, // Include to get workspaceId
     },
-  });
+  })
 
   if (!project) {
-    return <NotFound />;
+    return <NotFound />
   }
 
   return (
@@ -29,7 +31,12 @@ export default async function ProjectDetailPage({
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{project.name}</h1>
+            <Link href={`/workspaces/${project.workspaceId}/projects`}>
+              <div className="flex items-center justify-start">
+                <ArrowLeft />
+                <h1 className="text-3xl font-bold mb-2">{project.name}</h1>
+              </div>
+            </Link>
             {project.description && (
               <p className="text-gray-600">{project.description}</p>
             )}
@@ -49,8 +56,8 @@ export default async function ProjectDetailPage({
             URL: <code>/api/validate/{project.endpointSlug}</code>
           </div>
           <p className="text-xs text-muted-foreground">
-            Include header <code>X-API-Key</code> with the value shown in the edit
-            dialog to validate XML against this project.
+            Include header <code>X-API-Key</code> with the value shown in the
+            edit dialog to validate XML against this project.
           </p>
         </div>
       </div>
@@ -59,7 +66,10 @@ export default async function ProjectDetailPage({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Rules</h2>
-          <AddRuleDialog projectId={projectId} workspaceId={project.workspaceId} />
+          <AddRuleDialog
+            projectId={projectId}
+            workspaceId={project.workspaceId}
+          />
         </div>
 
         <div className="bg-white rounded-lg border">
@@ -67,5 +77,5 @@ export default async function ProjectDetailPage({
         </div>
       </div>
     </div>
-  );
+  )
 }
