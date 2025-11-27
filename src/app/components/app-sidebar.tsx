@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FolderKanban, Users } from "lucide-react";
+import { FolderKanban, Users, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaces } from "../lib/hooks/workspaces";
+import { signOut, useSession } from "next-auth/react";
+import { useState } from "react";
 
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Extract workspaceId from pathname (e.g., /workspaces/123/... -> 123)
   const workspaceIdMatch = pathname.match(/\/workspaces\/([^\/]+)/);
@@ -38,6 +42,11 @@ export function AppSidebar() {
 
   const handleWorkspaceChange = (selectedWorkspaceId: string) => {
     router.push(`/workspaces/${selectedWorkspaceId}/projects`);
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await signOut({ callbackUrl: "/login" });
   };
 
   return (
@@ -100,11 +109,30 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t p-4">
-        <p className="text-xs text-muted-foreground">
-          © 2025 XML Validator
-        </p>
+      {/* Footer - User Info & Logout */}
+      <div className="border-t p-4 space-y-3">
+        {session?.user && (
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-foreground truncate">
+              {session.user.name}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {session.user.email}
+            </p>
+          </div>
+        )}
+        <button
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+            "text-muted-foreground hover:bg-red-50 hover:text-red-600",
+            "disabled:opacity-50 disabled:cursor-not-allowed"
+          )}
+        >
+          <LogOut className="h-5 w-5" />
+          {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+        </button>
       </div>
     </div>
   );
