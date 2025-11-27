@@ -26,6 +26,4 @@ export type UpdateProjectInput = {
   regenerateSecret?: boolean;
 };
 
-export type GetProjectResponse = Awaited<
-  ReturnType<typeof prisma.project.findUnique>
->;
+export type GetProjectResponse = Awaited<Project>;

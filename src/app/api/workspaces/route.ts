@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../lib/db";
+import { Workspace } from "@prisma/client";
 
-export type GetWorkspacesResponse = Awaited<
-  ReturnType<typeof prisma.workspace.findMany>
->;
+export type GetWorkspacesResponse = Workspace[];
+
 export async function GET() {
   try {
     const result = await prisma.workspace.findMany();
