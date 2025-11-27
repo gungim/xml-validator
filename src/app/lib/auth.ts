@@ -14,7 +14,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        console.log('[AUTH] Authorize called with:', { 
+          email: credentials?.email, 
+          hasPassword: !!credentials?.password 
+        });
+
         if (!credentials?.email || !credentials?.password) {
+          console.log('[AUTH] Missing credentials');
           return null;
         }
 
@@ -22,7 +28,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email as string },
         });
 
+        console.log('[AUTH] User lookup result:', { 
+          found: !!user, 
+          email: user?.email 
+        });
+
         if (!user) {
+          console.log('[AUTH] User not found');
           return null;
         }
 
@@ -31,9 +43,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.password
         );
 
+        console.log('[AUTH] Password validation:', { isPasswordValid });
+
         if (!isPasswordValid) {
+          console.log('[AUTH] Invalid password');
           return null;
         }
+
+        console.log('[AUTH] Login successful for:', user.email);
 
         return {
           id: user.id,
@@ -42,6 +59,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: user.role,
         };
       },
+
     }),
   ],
   pages: {
