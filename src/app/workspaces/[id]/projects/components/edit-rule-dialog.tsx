@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Loading } from '@/src/app/components/loading'
 import { useForm } from '@tanstack/react-form'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
@@ -188,7 +189,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
-          <div>Loading rule data...</div>
+          <Loading />
         ) : (
           <form
             onSubmit={e => {

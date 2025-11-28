@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Loading } from '../../components/loading'
 import { useProjects } from '../../lib/hooks/projects'
 import { CreateProjectDialog } from './create-project-dialog'
 
@@ -8,8 +9,10 @@ interface ProjectListProps {
   workspace_id: string
 }
 export default function ProjectList({ workspace_id }: ProjectListProps) {
-  const { data: projects } = useProjects(workspace_id)
-
+  const { data: projects, isLoading } = useProjects(workspace_id)
+  if (isLoading) {
+    return <Loading />
+  }
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center flex-wrap">

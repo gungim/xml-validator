@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Loading } from '@/src/app/components/loading'
 import { useUsers } from '@/src/app/lib/hooks/users'
 import { UserWithPermissions } from '@/src/app/lib/types/users'
 import { Role } from '@prisma/client'
@@ -78,9 +79,7 @@ export default function UsersPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading users...</p>
-        </div>
+        <Loading />
       ) : error ? (
         <div className="text-center py-12">
           <p className="text-red-500">Error loading users</p>

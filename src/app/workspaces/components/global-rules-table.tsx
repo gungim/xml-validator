@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Loading } from '../../components/loading'
 import {
   useDeleteGlobalRule,
   useGlobalRules,
@@ -46,7 +47,7 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
   }
 
   if (isLoading) {
-    return <div>Loading global rules...</div>
+    return <Loading />
   }
 
   // Filter to get only top-level global rules (no parent)

@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Loading } from '@/src/app/components/loading'
 import {
   useDeleteRule,
   useRules,
@@ -69,7 +70,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
   }
 
   if (isLoading) {
-    return <div>Loading rules...</div>
+    return <Loading />
   }
 
   // Filter to get only top-level rules (no parent)
