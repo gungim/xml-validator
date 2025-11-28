@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# XML Validator Tool
+
+A powerful web-based tool for defining validation rules and validating XML files against them. Built with Next.js, Prisma, and Tailwind CSS.
+
+## Features
+
+### 🏗️ Workspace & Project Management
+
+- Organize your work into **Workspaces**.
+- Create multiple **Projects** within workspaces to manage different sets of validation rules.
+
+### 📝 Rule Management
+
+Define complex validation logic for your XML structures:
+
+- **Data Types:** Support for String, Number, Boolean, Object, and Array.
+- **Conditions:**
+  - **String:** Regex pattern, min/max length, allow empty.
+  - **Number:** Min/max value range.
+- **Global Rules:** Create reusable rules (like "Email" or "Phone Number") that can be applied across multiple projects.
+- **Nested Rules:** Define complex hierarchical structures with parent/child relationships.
+
+### 🚀 Smart Import
+
+- **Import from XML:** Automatically generate validation rules by pasting an XML sample.
+- **Interactive Editing:** Fine-tune conditions and required status directly during import.
+- **Parent Selection:** Import rules directly under an existing object or array in your schema.
+
+### ✅ Validation Testing
+
+- **Test Sandbox:** Validate XML content directly in the browser against your defined rules.
+- **Real-time Feedback:** Get immediate error reporting with precise location and details.
+
+## Tech Stack
+
+- **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+- **Database:** [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
+- **State Management:** [TanStack Query](https://tanstack.com/query/latest)
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repository**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. **Install dependencies**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   ```bash
+   npm install
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Set up the database**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   # Create a .env file with your database URL
+   cp .env.example .env
 
-## Learn More
+   # Run migrations
+   npx prisma migrate dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Run the development server**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. **Open the app**
+   Visit [https://xml-validator-gamma.vercel.app/workspaces](https://xml-validator-gamma.vercel.app/workspaces) to start defining rules!
