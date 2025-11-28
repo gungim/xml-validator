@@ -1,92 +1,78 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Permission } from "@prisma/client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
-import { UserWithPermissions } from "@/src/app/lib/types/users";
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  useAssignPermission,
+  useRemovePermission,
+} from '@/src/app/lib/hooks/users'
+import { useWorkspaces } from '@/src/app/lib/hooks/workspaces'
+import { UserWithPermissions } from '@/src/app/lib/types/users'
+import { Permission } from '@prisma/client'
+import { Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 interface PermissionsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  user: UserWithPermissions | null;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  user: UserWithPermissions | null
 }
 
-export function PermissionsDialog({ open, onOpenChange, user }: PermissionsDialogProps) {
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
-  const [selectedPermission, setSelectedPermission] = useState<Permission>(Permission.READ);
-  const queryClient = useQueryClient();
+export function PermissionsDialog({
+  open,
+  onOpenChange,
+  user,
+}: PermissionsDialogProps) {
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('')
+  const [selectedPermission, setSelectedPermission] = useState<Permission>(
+    Permission.READ
+  )
+  const {
+    mutateAsync: assignPermission,
+    isPending: isAssigningPermission,
+    error: assignPermissionError,
+  } = useAssignPermission(user?.id || '')
+  const {
+    mutateAsync: removePermission,
+    isPending: isRemovingPermission,
+    error: removePermissionError,
+  } = useRemovePermission(user?.id || '')
 
   // Fetch workspaces
-  const { data: workspacesData } = useQuery({
-    queryKey: ["workspaces"],
-    queryFn: async () => {
-      const response = await fetch("/api/workspaces");
-      if (!response.ok) throw new Error("Failed to fetch workspaces");
-      return response.json();
-    },
-  });
-
-  const assignPermissionMutation = useMutation({
-    mutationFn: async (data: { workspaceId: string; permission: Permission }) => {
-      const response = await fetch(`/api/users/${user?.id}/permissions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to assign permission");
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      setSelectedWorkspaceId("");
-      setSelectedPermission(Permission.READ);
-    },
-  });
-
-  const removePermissionMutation = useMutation({
-    mutationFn: async (workspaceId: string) => {
-      const response = await fetch(
-        `/api/users/${user?.id}/permissions?workspaceId=${workspaceId}`,
-        { method: "DELETE" }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to remove permission");
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-  });
+  const { data: workspacesData } = useWorkspaces()
 
   const handleAssignPermission = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (selectedWorkspaceId) {
-      assignPermissionMutation.mutate({
+      assignPermission({
         workspaceId: selectedWorkspaceId,
         permission: selectedPermission,
-      });
+      })
     }
-  };
+  }
 
-  if (!user) return null;
+  if (!user) return null
 
-  const workspaces = workspacesData?.workspaces || [];
+  const workspaces = workspacesData || []
   const availableWorkspaces = workspaces.filter(
-    (ws: any) => !user.permissions.some((p) => p.workspaceId === ws.id)
-  );
+    (ws: any) => !user.permissions.some(p => p.workspaceId === ws.id)
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -108,20 +94,20 @@ export function PermissionsDialog({ open, onOpenChange, user }: PermissionsDialo
               </p>
             ) : (
               <div className="space-y-2">
-                {user.permissions.map((permission) => (
+                {user.permissions.map(permission => (
                   <div
                     key={permission.id}
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <span className="font-medium">
-                        {permission.workspace?.name || "Unknown Workspace"}
+                        {permission.workspace?.name || 'Unknown Workspace'}
                       </span>
                       <Badge
                         variant={
                           permission.permission === Permission.EDIT
-                            ? "default"
-                            : "secondary"
+                            ? 'default'
+                            : 'secondary'
                         }
                       >
                         {permission.permission}
@@ -130,8 +116,8 @@ export function PermissionsDialog({ open, onOpenChange, user }: PermissionsDialo
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => removePermissionMutation.mutate(permission.workspaceId)}
-                      disabled={removePermissionMutation.isPending}
+                      onClick={() => removePermission(permission.workspaceId)}
+                      disabled={isRemovingPermission}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -151,7 +137,7 @@ export function PermissionsDialog({ open, onOpenChange, user }: PermissionsDialo
                   value={selectedWorkspaceId}
                   onValueChange={setSelectedWorkspaceId}
                 >
-                  <SelectTrigger id="workspace">
+                  <SelectTrigger id="workspace" className="w-full">
                     <SelectValue placeholder="Select workspace" />
                   </SelectTrigger>
                   <SelectContent>
@@ -173,9 +159,11 @@ export function PermissionsDialog({ open, onOpenChange, user }: PermissionsDialo
                 <Label htmlFor="permission">Permission Level</Label>
                 <Select
                   value={selectedPermission}
-                  onValueChange={(value) => setSelectedPermission(value as Permission)}
+                  onValueChange={value =>
+                    setSelectedPermission(value as Permission)
+                  }
                 >
-                  <SelectTrigger id="permission">
+                  <SelectTrigger id="permission" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -184,23 +172,23 @@ export function PermissionsDialog({ open, onOpenChange, user }: PermissionsDialo
                   </SelectContent>
                 </Select>
               </div>
-              {assignPermissionMutation.isError && (
+              {assignPermissionError && (
                 <p className="text-sm text-red-500">
-                  {assignPermissionMutation.error.message}
+                  {assignPermissionError.message}
                 </p>
               )}
-              <Button
-                type="submit"
-                disabled={
-                  !selectedWorkspaceId ||
-                  assignPermissionMutation.isPending ||
-                  availableWorkspaces.length === 0
-                }
-              >
-                {assignPermissionMutation.isPending
-                  ? "Assigning..."
-                  : "Assign Permission"}
-              </Button>
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={
+                    !selectedWorkspaceId ||
+                    isAssigningPermission ||
+                    availableWorkspaces.length === 0
+                  }
+                >
+                  {isAssigningPermission ? 'Assigning...' : 'Assign Permission'}
+                </Button>
+              </div>
             </form>
           </div>
         </div>
@@ -212,5 +200,5 @@ export function PermissionsDialog({ open, onOpenChange, user }: PermissionsDialo
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

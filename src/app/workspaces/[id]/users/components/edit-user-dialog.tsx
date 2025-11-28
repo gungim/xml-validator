@@ -1,62 +1,69 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Role } from "@prisma/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UserWithPermissions } from "@/src/app/lib/types/users";
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useUpdateUser } from '@/src/app/lib/hooks/users'
+import {
+  updateUserSchema,
+  UserWithPermissions,
+} from '@/src/app/lib/types/users'
+import { Role } from '@prisma/client'
+import { useForm } from '@tanstack/react-form'
 
 interface EditUserDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  user: UserWithPermissions | null;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  user: UserWithPermissions | null
 }
 
-export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<Role>(Role.USER);
-  const queryClient = useQueryClient();
+export function EditUserDialog({
+  open,
+  onOpenChange,
+  user,
+}: EditUserDialogProps) {
+  const {
+    mutateAsync: updateUser,
+    isPending: isUpdatingUser,
+    error,
+  } = useUpdateUser(user?.id || '')
 
-  useEffect(() => {
-    if (user) {
-      setName(user.name);
-      setEmail(user.email);
-      setRole(user.role);
-    }
-  }, [user]);
-
-  const updateUserMutation = useMutation({
-    mutationFn: async (data: { name: string; email: string; role: Role }) => {
-      const response = await fetch(`/api/users/${user?.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update user");
-      }
-
-      return response.json();
+  const form = useForm({
+    defaultValues: {
+      name: user?.name || '',
+      email: user?.email || '',
+      role: user?.role || Role.USER,
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      onOpenChange(false);
+    validators: {
+      onSubmit: updateUserSchema,
     },
-  });
+    onSubmit: async ({ value }) => {
+      await updateUser(value).then(() => onOpenChange(false))
+    },
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateUserMutation.mutate({ name, email, role });
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    form.handleSubmit()
+  }
 
-  if (!user) return null;
+  if (!user) return null
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,41 +77,78 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input
-                id="edit-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+              <form.Field name="name">
+                {field => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Name</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={e => field.handleChange(e.target.value)}
+                      placeholder="John Doe"
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-red-500">
+                        {field.state.meta.errors[0]?.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </form.Field>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <form.Field name="email">
+                {field => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Email</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={e => field.handleChange(e.target.value)}
+                      placeholder="john@example.com"
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-red-500">
+                        {field.state.meta.errors[0]?.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </form.Field>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-role">Role</Label>
-              <Select value={role} onValueChange={(value) => setRole(value as Role)}>
-                <SelectTrigger id="edit-role" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={Role.USER}>User</SelectItem>
-                  <SelectItem value={Role.ADMIN}>Admin</SelectItem>
-                </SelectContent>
-              </Select>
+              <form.Field name="role">
+                {field => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Role</Label>
+                    <Select
+                      value={field.state.value}
+                      onValueChange={value => field.handleChange(value as Role)}
+                    >
+                      <SelectTrigger id="edit-role" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={Role.USER}>User</SelectItem>
+                        <SelectItem value={Role.ADMIN}>Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-red-500">
+                        {field.state.meta.errors[0]?.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </form.Field>
             </div>
           </div>
-          {updateUserMutation.isError && (
-            <p className="text-sm text-red-500 mb-4">
-              {updateUserMutation.error.message}
-            </p>
+          {error && (
+            <p className="text-sm text-red-500 mb-4">{error.message}</p>
           )}
           <DialogFooter>
             <Button
@@ -114,12 +158,12 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={updateUserMutation.isPending}>
-              {updateUserMutation.isPending ? "Saving..." : "Save Changes"}
+            <Button type="submit" disabled={isUpdatingUser}>
+              {isUpdatingUser ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

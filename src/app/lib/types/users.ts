@@ -1,76 +1,77 @@
-import { z } from "zod";
-import { Role, Permission } from "@prisma/client";
+import { Permission, Role } from '@prisma/client'
+import { z } from 'zod'
 
 // Enums from Prisma
-export { Role, Permission };
+export { Permission, Role }
 
 // User entity types
 export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  name: string
+  email: string
+  role: Role
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface UserWithPermissions extends User {
-  permissions: UserPermission[];
+  permissions: UserPermission[]
 }
 
 export interface UserPermission {
-  id: string;
-  userId: string;
-  workspaceId: string;
-  permission: Permission;
-  createdAt: Date;
+  id: string
+  userId: string
+  workspaceId: string
+  permission: Permission
+  createdAt: Date
   workspace?: {
-    id: string;
-    name: string;
-  };
+    id: string
+    name: string
+  }
 }
 
 // API Request/Response types
 export interface CreateUserRequest {
-  name: string;
-  email: string;
-  role: Role;
+  name: string
+  email: string
+  password: string
+  role: Role
 }
 
 export interface UpdateUserRequest {
-  name?: string;
-  email?: string;
-  role?: Role;
+  name?: string
+  email?: string
+  role?: Role
 }
 
 export interface AssignPermissionRequest {
-  workspaceId: string;
-  permission: Permission;
+  workspaceId: string
+  permission: Permission
 }
 
 export interface GetUsersResponse {
-  users: UserWithPermissions[];
+  users: UserWithPermissions[]
 }
 
 export interface GetUserResponse {
-  user: UserWithPermissions;
+  user: UserWithPermissions
 }
 
 // Zod validation schemas
 export const createUserSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  email: z.email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
+  name: z.string().min(1, 'Name is required').max(100),
+  email: z.email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters long'),
   role: z.enum(Role),
-});
+})
 
 export const updateUserSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  email: z.email().optional(),
-  role: z.enum(Role).optional(),
-});
+  name: z.string().min(1, 'Name is required').max(100),
+  email: z.email('Invalid email address'),
+  role: z.enum(Role),
+})
 
 export const assignPermissionSchema = z.object({
-  workspaceId: z.string().min(1, "Workspace ID is required"),
+  workspaceId: z.string().min(1, 'Workspace ID is required'),
   permission: z.enum(Permission),
-});
+})

@@ -1,50 +1,50 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
-import { UserList } from "./components/user-list";
-import { AddUserDialog } from "./components/add-user-dialog";
-import { EditUserDialog } from "./components/edit-user-dialog";
-import { DeleteUserDialog } from "./components/delete-user-dialog";
-import { PermissionsDialog } from "./components/permissions-dialog";
-import { Role } from "@prisma/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserWithPermissions } from "@/src/app/lib/types/users";
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useUsers } from '@/src/app/lib/hooks/users'
+import { UserWithPermissions } from '@/src/app/lib/types/users'
+import { Role } from '@prisma/client'
+import { UserPlus } from 'lucide-react'
+import { useState } from 'react'
+import { AddUserDialog } from './components/add-user-dialog'
+import { DeleteUserDialog } from './components/delete-user-dialog'
+import { EditUserDialog } from './components/edit-user-dialog'
+import { PermissionsDialog } from './components/permissions-dialog'
+import { UserList } from './components/user-list'
 
 export default function UsersPage() {
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserWithPermissions | null>(null);
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<UserWithPermissions | null>(
+    null
+  )
+  const [roleFilter, setRoleFilter] = useState<string>('all')
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["users", roleFilter],
-    queryFn: async () => {
-      const url = roleFilter !== "all" ? `/api/users?role=${roleFilter}` : "/api/users";
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch users");
-      return response.json();
-    },
-  });
+  const { data, isLoading, error } = useUsers()
 
   const handleEdit = (user: UserWithPermissions) => {
-    setSelectedUser(user);
-    setEditDialogOpen(true);
-  };
+    setSelectedUser(user)
+    setEditDialogOpen(true)
+  }
 
   const handleDelete = (user: UserWithPermissions) => {
-    setSelectedUser(user);
-    setDeleteDialogOpen(true);
-  };
+    setSelectedUser(user)
+    setDeleteDialogOpen(true)
+  }
 
   const handleManagePermissions = (user: UserWithPermissions) => {
-    setSelectedUser(user);
-    setPermissionsDialogOpen(true);
-  };
+    setSelectedUser(user)
+    setPermissionsDialogOpen(true)
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -114,5 +114,5 @@ export default function UsersPage() {
         user={selectedUser}
       />
     </div>
-  );
+  )
 }
