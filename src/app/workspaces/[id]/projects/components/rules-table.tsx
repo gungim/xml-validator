@@ -2,11 +2,13 @@
 
 import { Button } from '@/components/ui/button'
 import { Loading } from '@/src/app/components/loading'
+import { useSession } from 'next-auth/react'
 import {
   useDeleteRule,
   useRules,
   useUpdateRule,
 } from '../../../../lib/hooks/rules'
+import { usePermissions } from '../../../../lib/hooks/users'
 import { AddRuleDialog } from './add-rule-dialog'
 import { EditRuleDialog } from './edit-rule-dialog'
 
@@ -35,6 +37,8 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
   const { data: rules, isLoading } = useRules(projectId)
   const deleteRule = useDeleteRule()
   const updateRule = useUpdateRule()
+  const { data: session } = useSession()
+  const { canEdit, canDelete } = usePermissions(workspaceId, session?.user?.id)
 
   const handleDelete = async (rule: Rule) => {
     const childCount = rule.children?.length || 0
@@ -139,7 +143,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
         <td className="px-4 py-3 text-gray-600">{rule.description || '-'}</td>
         <td className="px-4 py-3">
           <div className="flex gap-2">
-            {canHaveChildren(rule.dataType) && !rule.globalRule && (
+            {canEdit && canHaveChildren(rule.dataType) && !rule.globalRule && (
               <AddRuleDialog
                 projectId={projectId}
                 parentId={rule.id}
@@ -148,16 +152,18 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
               />
             )}
 
-            <EditRuleDialog ruleId={rule.id} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDelete(rule)}
-              disabled={deleteRule.isPending}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              Delete
-            </Button>
+            {canEdit && <EditRuleDialog ruleId={rule.id} />}
+            {canDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDelete(rule)}
+                disabled={deleteRule.isPending}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                Delete
+              </Button>
+            )}
             {rule.globalRule && (
               <span className="text-xs text-gray-500 italic">
                 Linked to global rule

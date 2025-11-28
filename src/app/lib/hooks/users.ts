@@ -3,6 +3,7 @@ import {
   assignPermission,
   createUser,
   deleteUser,
+  getUser,
   getUsers,
   removePermission,
   updateUser,
@@ -20,6 +21,63 @@ export function useUsers() {
     queryKey: ['users'],
     queryFn: () => getUsers(),
   })
+}
+
+export function useCurrentUser(userId?: string) {
+  return useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => (userId ? getUser(userId) : Promise.resolve(null)),
+    enabled: !!userId,
+  })
+}
+
+export function usePermissions(workspaceId: string, userId?: string) {
+  const { data: userData, isLoading } = useCurrentUser(userId)
+  const user = userData?.data
+
+  if (isLoading) {
+    return {
+      canEdit: false,
+      canDelete: false,
+      role: null,
+      isLoading: true,
+    }
+  }
+
+  if (!user) {
+    return {
+      canEdit: false,
+      canDelete: false,
+      role: null,
+      isLoading: false,
+    }
+  }
+
+  if (user.role === 'ADMIN') {
+    return {
+      canEdit: true,
+      canDelete: true,
+      role: 'ADMIN',
+      isLoading: false,
+    }
+  }
+
+  const permission = user.permissions.find(
+    (p: { workspaceId: string; permission: string }) =>
+      p.workspaceId === workspaceId
+  )?.permission
+
+  const canEdit = permission === 'EDIT'
+  // Assuming EDIT permission implies delete capability for now, or strictly EDIT
+  // If DELETE is a separate permission, check for it. Based on schema, only READ/EDIT.
+  const canDelete = permission === 'EDIT'
+
+  return {
+    canEdit,
+    canDelete,
+    role: user.role,
+    isLoading: false,
+  }
 }
 
 export function useCreateUser() {

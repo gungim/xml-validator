@@ -1,11 +1,13 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { useSession } from 'next-auth/react'
 import { Loading } from '../../components/loading'
 import {
   useDeleteGlobalRule,
   useGlobalRules,
 } from '../../lib/hooks/global-rules'
+import { usePermissions } from '../../lib/hooks/users'
 import { AddGlobalRuleDialog } from './add-global-rule-dialog'
 import { EditGlobalRuleDialog } from './edit-global-rule-dialog'
 
@@ -29,6 +31,8 @@ interface GlobalRule {
 export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
   const { data: globalRules, isLoading } = useGlobalRules(workspaceId)
   const deleteGlobalRule = useDeleteGlobalRule()
+  const { data: session } = useSession()
+  const { canEdit, canDelete } = usePermissions(workspaceId, session?.user?.id)
 
   const handleDelete = async (globalRule: GlobalRule) => {
     const childCount = globalRule.children?.length || 0
@@ -59,7 +63,7 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Global Rules</h2>
-          <AddGlobalRuleDialog workspaceId={workspaceId} />
+          {canEdit && <AddGlobalRuleDialog workspaceId={workspaceId} />}
         </div>
         <div className="text-center py-8 text-gray-500">
           No global rules yet. Create your first reusable validation rule.
@@ -127,26 +131,30 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
         </td>
         <td className="px-4 py-3">
           <div className="flex gap-2">
-            {canHaveChildren(globalRule.dataType) && (
+            {canEdit && canHaveChildren(globalRule.dataType) && (
               <AddGlobalRuleDialog
                 workspaceId={workspaceId}
                 parentId={globalRule.id}
                 parentDataType={globalRule.dataType as 'object' | 'array'}
               />
             )}
-            <EditGlobalRuleDialog
-              globalRule={globalRule}
-              workspaceId={workspaceId}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDelete(globalRule)}
-              disabled={deleteGlobalRule.isPending}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              Delete
-            </Button>
+            {canEdit && (
+              <EditGlobalRuleDialog
+                globalRule={globalRule}
+                workspaceId={workspaceId}
+              />
+            )}
+            {canDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDelete(globalRule)}
+                disabled={deleteGlobalRule.isPending}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                Delete
+              </Button>
+            )}
           </div>
         </td>
       </tr>
@@ -166,7 +174,7 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Global Rules</h2>
-        <AddGlobalRuleDialog workspaceId={workspaceId} />
+        {canEdit && <AddGlobalRuleDialog workspaceId={workspaceId} />}
       </div>
 
       <div className="overflow-x-auto">

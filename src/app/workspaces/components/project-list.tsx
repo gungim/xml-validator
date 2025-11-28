@@ -1,8 +1,10 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Loading } from '../../components/loading'
 import { useProjects } from '../../lib/hooks/projects'
+import { usePermissions } from '../../lib/hooks/users'
 import { CreateProjectDialog } from './create-project-dialog'
 
 interface ProjectListProps {
@@ -10,39 +12,43 @@ interface ProjectListProps {
 }
 export default function ProjectList({ workspace_id }: ProjectListProps) {
   const { data: projects, isLoading } = useProjects(workspace_id)
+  const { data: session } = useSession()
+  const { canEdit } = usePermissions(workspace_id, session?.user?.id)
+
   if (isLoading) {
     return <Loading />
   }
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center flex-wrap">
-        <h2 className="text-2xl font-bold mb-4">Projects</h2>
-        <CreateProjectDialog workspaceId={workspace_id} />
+        <h2 className="text-xl font-semibold">Projects</h2>
+        {canEdit && <CreateProjectDialog workspaceId={workspace_id} />}
       </div>
 
-      {projects?.data?.length === 0 ? (
-        <div>
-          <span>Empty</span>
-        </div>
+      {!projects?.data || projects.data.length === 0 ? (
+        <p className="text-gray-500 text-sm">
+          No projects yet. Create your first project!
+        </p>
       ) : (
-        <div className="space-y-2">
-          {projects?.data?.map(item => (
-            <div
-              key={item.id}
-              className="p-4 border rounded hover:bg-gray-50 space-y-1"
-            >
-              <Link
-                href={`/workspaces/${workspace_id}/projects/${item.id}`}
-                className="text-blue-600 hover:underline font-medium"
-              >
-                {item.name}
+        <ul className="divide-y">
+          {projects.data.map(project => (
+            <li key={project.id} className="px-4 py-2">
+              <Link href={`/workspaces/${workspace_id}/projects/${project.id}`}>
+                <div>
+                  <h3 className="font-medium">{project.name}</h3>
+                  {project.description && (
+                    <p className="text-sm text-gray-600">
+                      {project.description}
+                    </p>
+                  )}
+                </div>
               </Link>
               <p className="text-xs text-muted-foreground">
-                Endpoint: <code>/api/validate/{item.endpointSlug}</code>
+                Endpoint: <code>/api/validate/{project.endpointSlug}</code>
               </p>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   )

@@ -18,6 +18,15 @@ export async function getUsers(
   return result
 }
 
+export async function getUser(
+  id: string
+): Promise<ApiSuccessResponse<UserWithPermissions>> {
+  const res = await fetch(`/api/users/${id}`)
+  if (!res.ok) throw new Error('Failed to fetch user')
+  const result = await res.json()
+  return result
+}
+
 export async function createUser(
   input: CreateUserRequest
 ): Promise<ApiSuccessResponse<User>> {
