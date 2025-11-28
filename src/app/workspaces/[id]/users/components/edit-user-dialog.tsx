@@ -25,6 +25,7 @@ import {
 } from '@/src/app/lib/types/users'
 import { Role } from '@prisma/client'
 import { useForm } from '@tanstack/react-form'
+import { useEffect } from 'react'
 
 interface EditUserDialogProps {
   open: boolean
@@ -45,9 +46,9 @@ export function EditUserDialog({
 
   const form = useForm({
     defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      role: user?.role || Role.USER,
+      name: '',
+      email: '',
+      role: Role.USER as Role,
     },
     validators: {
       onSubmit: updateUserSchema,
@@ -62,6 +63,14 @@ export function EditUserDialog({
     e.stopPropagation()
     form.handleSubmit()
   }
+
+  useEffect(() => {
+    if (open) {
+      form.setFieldValue('name', user?.name || '')
+      form.setFieldValue('email', user?.email || '')
+      form.setFieldValue('role', user?.role || Role.USER)
+    }
+  }, [open])
 
   if (!user) return null
 

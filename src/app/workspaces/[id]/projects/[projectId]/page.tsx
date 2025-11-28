@@ -27,7 +27,7 @@ export default async function ProjectDetailPage({
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="container mx-auto p-6 space-y-8">
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">
@@ -35,7 +35,7 @@ export default async function ProjectDetailPage({
             <Link href={`/workspaces/${project.workspaceId}/projects`}>
               <div className="flex items-center justify-start">
                 <ArrowLeft />
-                <h1 className="text-3xl font-bold mb-2">{project.name}</h1>
+                <h1 className="text-3xl font-bold mb-2 ml-3">{project.name}</h1>
               </div>
             </Link>
             {project.description && (
@@ -80,9 +80,7 @@ export default async function ProjectDetailPage({
           />
         </div>
 
-        <div className="bg-white rounded-lg border">
-          <RulesTable projectId={projectId} workspaceId={project.workspaceId} />
-        </div>
+        <RulesTable projectId={projectId} workspaceId={project.workspaceId} />
       </div>
     </div>
   )

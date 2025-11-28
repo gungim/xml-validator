@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Edit } from 'lucide-react'
 import { useState } from 'react'
 import { useUpdateGlobalRule } from '../../lib/hooks/global-rules'
 import type { NumberCondition, StringCondition } from '../../lib/types/rules'
@@ -91,8 +92,8 @@ export function EditGlobalRuleDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Edit
+        <Button variant="ghost" size="sm">
+          <Edit className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">

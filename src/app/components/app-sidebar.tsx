@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -133,18 +134,15 @@ export function AppSidebar() {
             </p>
           </div>
         )}
-        <button
+        <Button
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className={cn(
-            'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-            'text-muted-foreground hover:bg-red-50 hover:text-red-600',
-            'disabled:opacity-50 disabled:cursor-not-allowed'
-          )}
+          variant="ghost"
+          className="w-full"
         >
           <LogOut className="h-5 w-5" />
           {isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
-        </button>
+        </Button>
       </div>
     </div>
   )

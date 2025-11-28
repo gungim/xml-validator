@@ -161,7 +161,7 @@ export function AddRuleDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {isChildRule ? (
-          <Button variant="outline" size="sm">
+          <Button variant="ghost" size="sm">
             {buttonLabel}
           </Button>
         ) : (

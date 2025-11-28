@@ -41,9 +41,8 @@ export default async function WorkspaceDetailPage({
         <ProjectList workspace_id={id} />
       </div>
 
-      <div className="border-t pt-8">
-        <GlobalRulesTable workspaceId={id} />
-      </div>
+      <div className="border-t pt-8"></div>
+      <GlobalRulesTable workspaceId={id} />
     </div>
   )
 }

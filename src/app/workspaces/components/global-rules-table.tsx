@@ -1,6 +1,15 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Trash2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { Loading } from '../../components/loading'
 import {
@@ -111,26 +120,22 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
 
     // Add the current global rule row
     rows.push(
-      <tr key={globalRule.id} className="border-b hover:bg-gray-50">
-        <td className="px-4 py-3" style={{ paddingLeft: `${indent + 16}px` }}>
+      <TableRow key={globalRule.id}>
+        <TableCell style={{ paddingLeft: `${indent + 16}px` }}>
           <div className="flex items-center gap-2">
             {level > 0 && <span className="text-gray-400">└─</span>}
             <span className="font-medium">{globalRule.name}</span>
           </div>
-        </td>
-        <td className="px-4 py-3 text-gray-600">
-          {globalRule.description || '-'}
-        </td>
-        <td className="px-4 py-3">
+        </TableCell>
+        <TableCell>{globalRule.description || '-'}</TableCell>
+        <TableCell>
           <code className="bg-gray-100 px-2 py-1 rounded text-sm">
             {globalRule.dataType}
           </code>
-        </td>
-        <td className="px-4 py-3 text-sm text-gray-600">
-          {getConditionSummary(globalRule)}
-        </td>
-        <td className="px-4 py-3">
-          <div className="flex gap-2">
+        </TableCell>
+        <TableCell>{getConditionSummary(globalRule)}</TableCell>
+        <TableCell>
+          <div className="flex justify-end gap-2">
             {canEdit && canHaveChildren(globalRule.dataType) && (
               <AddGlobalRuleDialog
                 workspaceId={workspaceId}
@@ -146,18 +151,18 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
             )}
             {canDelete && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => handleDelete(globalRule)}
                 disabled={deleteGlobalRule.isPending}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
-                Delete
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
           </div>
-        </td>
-      </tr>
+        </TableCell>
+      </TableRow>
     )
 
     // Add children rows recursively
@@ -177,25 +182,23 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
         {canEdit && <AddGlobalRuleDialog workspaceId={workspaceId} />}
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b bg-gray-50">
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Description</th>
-              <th className="px-4 py-3 text-left font-medium">Data Type</th>
-              <th className="px-4 py-3 text-left font-medium">
-                Condition Summary
-              </th>
-              <th className="px-4 py-3 text-left font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="overflow-x-auto border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Data Type</TableHead>
+              <TableHead>Condition Summary</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {topLevelGlobalRules?.map(globalRule =>
               renderGlobalRule(globalRule)
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   )
