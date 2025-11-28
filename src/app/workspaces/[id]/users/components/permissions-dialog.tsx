@@ -69,7 +69,7 @@ export function PermissionsDialog({
 
   if (!user) return null
 
-  const workspaces = workspacesData || []
+  const workspaces = workspacesData?.data || []
   const availableWorkspaces = workspaces.filter(
     (ws: any) => !user.permissions.some(p => p.workspaceId === ws.id)
   )

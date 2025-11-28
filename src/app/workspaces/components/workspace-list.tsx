@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import { Button } from "@/components/ui/button";
-import { GetWorkspacesResponse } from "../../api/workspaces/route";
-import Link from "next/link";
+import { Button } from '@/components/ui/button'
+import { Workspace } from '@prisma/client'
+import Link from 'next/link'
 
 interface WorkspaceListProps {
-  workspaces: GetWorkspacesResponse;
-  onRefetch: () => void;
+  workspaces: Workspace[]
+  onRefetch: () => void
 }
 
 export default function WorkspaceList({
@@ -14,11 +14,11 @@ export default function WorkspaceList({
   onRefetch,
 }: WorkspaceListProps) {
   if (!workspaces.length)
-    return <p className="text-gray-500 text-sm">No workspaces yet.</p>;
+    return <p className="text-gray-500 text-sm">No workspaces yet.</p>
 
   return (
     <ul className="divide-y border rounded-md">
-      {workspaces.map((ws) => (
+      {workspaces.map(ws => (
         <li key={ws.id} className="flex justify-between items-center px-4 py-2">
           <Link href={`/workspaces/${ws.id}/projects`}>
             <span>{ws.name}</span>
@@ -38,5 +38,5 @@ export default function WorkspaceList({
         </li>
       ))}
     </ul>
-  );
+  )
 }

@@ -1,20 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../lib/db";
-import { assignPermissionSchema } from "../../../../lib/types/users";
-import { Role } from "@prisma/client";
+import { Role } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '../../../../lib/db'
+import { assignPermissionSchema } from '../../../../lib/types/users'
 
 interface RouteParams {
   params: Promise<{
-    id: string;
-  }>;
+    id: string
+  }>
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = await params;
+    const { id } = await params
 
     const permissions = await prisma.userPermission.findMany({
       where: { userId: id },
@@ -27,57 +24,54 @@ export async function GET(
         },
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
-    });
+    })
 
-    return NextResponse.json({ permissions });
+    return NextResponse.json({ data: permissions })
   } catch (error) {
-    console.error("Error fetching permissions:", error);
+    console.error('Error fetching permissions:', error)
     return NextResponse.json(
-      { error: "Failed to fetch permissions" },
+      { error: 'Failed to fetch permissions' },
       { status: 500 }
-    );
+    )
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = await params;
-    const body = await request.json();
+    const { id } = await params
+    const body = await request.json()
 
     // Validate request body
-    const validatedData = assignPermissionSchema.parse(body);
+    const validatedData = assignPermissionSchema.parse(body)
 
     // Check if user exists and is not an admin
     const user = await prisma.user.findUnique({
       where: { id },
-    });
+    })
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     if (user.role === Role.ADMIN) {
       return NextResponse.json(
-        { error: "Cannot assign permissions to admin users" },
+        { error: 'Cannot assign permissions to admin users' },
         { status: 400 }
-      );
+      )
     }
 
     // Check if workspace exists
     const workspace = await prisma.workspace.findUnique({
       where: { id: validatedData.workspaceId },
-    });
+    })
 
     if (!workspace) {
       return NextResponse.json(
-        { error: "Workspace not found" },
+        { error: 'Workspace not found' },
         { status: 404 }
-      );
+      )
     }
 
     // Create or update permission
@@ -104,39 +98,36 @@ export async function POST(
           },
         },
       },
-    });
+    })
 
-    return NextResponse.json(permission, { status: 201 });
+    return NextResponse.json({ data: permission }, { status: 201 })
   } catch (error) {
-    console.error("Error assigning permission:", error);
+    console.error('Error assigning permission:', error)
 
-    if (error instanceof Error && error.name === "ZodError") {
+    if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json(
-        { error: "Invalid request data", details: error },
+        { error: 'Invalid request data', details: error },
         { status: 400 }
-      );
+      )
     }
 
     return NextResponse.json(
-      { error: "Failed to assign permission" },
+      { error: 'Failed to assign permission' },
       { status: 500 }
-    );
+    )
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = await params;
-    const workspaceId = request.nextUrl.searchParams.get("workspaceId");
+    const { id } = await params
+    const workspaceId = request.nextUrl.searchParams.get('workspaceId')
 
     if (!workspaceId) {
       return NextResponse.json(
-        { error: "Missing workspaceId" },
+        { error: 'Missing workspaceId' },
         { status: 400 }
-      );
+      )
     }
 
     await prisma.userPermission.delete({
@@ -146,14 +137,14 @@ export async function DELETE(
           workspaceId,
         },
       },
-    });
+    })
 
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json({ data: null }, { status: 204 })
   } catch (error) {
-    console.error("Error removing permission:", error);
+    console.error('Error removing permission:', error)
     return NextResponse.json(
-      { error: "Failed to remove permission" },
+      { error: 'Failed to remove permission' },
       { status: 500 }
-    );
+    )
   }
 }

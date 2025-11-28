@@ -1,76 +1,88 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from '@/src/app/lib/api/response'
+import { prisma } from '@/src/app/lib/db'
+import { NextRequest } from 'next/server'
 
-import { prisma } from "@/src/app/lib/db";
-
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id: workspaceId } = await params;
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: workspaceId } = await params
 
   if (!workspaceId) {
-    return NextResponse.json(
-      { error: "Missing workspaceId" },
-      { status: 400 },
-    );
+    return createErrorResponse('Missing workspaceId', 400)
   }
 
-  const projects = await prisma.project.findMany({
-    where: { workspaceId },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      endpointSlug: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-  return NextResponse.json(projects);
+  try {
+    const projects = await prisma.project.findMany({
+      where: { workspaceId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        endpointSlug: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+    return createSuccessResponse(projects)
+  } catch (err) {
+    console.error('Failed to fetch projects:', err)
+    return createErrorResponse('Failed to fetch projects', 500)
+  }
 }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: workspaceId } = await params;
-  const body = await request.json();
+  const { id: workspaceId } = await params
 
-  // Validate required fields
-  if (!body.name || typeof body.name !== "string" || body.name.trim().length === 0) {
-    return NextResponse.json(
-      { error: "Project name is required" },
-      { status: 400 }
-    );
+  try {
+    const body = await request.json()
+
+    // Validate required fields
+    if (
+      !body.name ||
+      typeof body.name !== 'string' ||
+      body.name.trim().length === 0
+    ) {
+      return createErrorResponse('Project name is required', 400)
+    }
+
+    // Verify workspace exists
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+    })
+
+    if (!workspace) {
+      return createErrorResponse('Workspace not found', 404)
+    }
+
+    // Create project
+    const project = await prisma.project.create({
+      data: {
+        name: body.name.trim(),
+        description: body.description?.trim() || null,
+        workspaceId,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        endpointSlug: true,
+        endpointSecret: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+
+    return createSuccessResponse(project)
+  } catch (err) {
+    console.error('Failed to create project:', err)
+    return createErrorResponse('Failed to create project', 500)
   }
-
-  // Verify workspace exists
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: workspaceId },
-  });
-
-  if (!workspace) {
-    return NextResponse.json(
-      { error: "Workspace not found" },
-      { status: 404 }
-    );
-  }
-
-  // Create project
-  const project = await prisma.project.create({
-    data: {
-      name: body.name.trim(),
-      description: body.description?.trim() || null,
-      workspaceId,
-    },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      endpointSlug: true,
-      endpointSecret: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  return NextResponse.json(project, { status: 201 });
 }

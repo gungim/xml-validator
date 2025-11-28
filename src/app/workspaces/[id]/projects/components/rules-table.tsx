@@ -1,97 +1,106 @@
-"use client";
+'use client'
 
-import { Button } from "@/components/ui/button";
-import { useRules, useDeleteRule, useUpdateRule } from "../../../../lib/hooks/rules";
-import { AddRuleDialog } from "./add-rule-dialog";
-import { EditRuleDialog } from "./edit-rule-dialog";
+import { Button } from '@/components/ui/button'
+import {
+  useDeleteRule,
+  useRules,
+  useUpdateRule,
+} from '../../../../lib/hooks/rules'
+import { AddRuleDialog } from './add-rule-dialog'
+import { EditRuleDialog } from './edit-rule-dialog'
 
 interface RulesTableProps {
-  projectId: string;
-  workspaceId: string;
+  projectId: string
+  workspaceId: string
 }
 
 interface Rule {
-  id: number;
-  name: string;
-  path: string;
-  required: boolean;
-  dataType: string;
-  description: string | null;
-  parentId: number | null;
-  children?: Rule[];
+  id: number
+  name: string
+  path: string
+  required: boolean
+  dataType: string
+  description: string | null
+  parentId: number | null
+  children?: Rule[]
   globalRule?: {
-    id: number;
-    name: string;
-    parentId: number | null;
-  } | null;
+    id: number
+    name: string
+    parentId: number | null
+  } | null
 }
 
 export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
-  const { data: rules, isLoading } = useRules(projectId);
-  console.log(rules)
-  const deleteRule = useDeleteRule();
-  const updateRule = useUpdateRule();
+  const { data: rules, isLoading } = useRules(projectId)
+  const deleteRule = useDeleteRule()
+  const updateRule = useUpdateRule()
 
   const handleDelete = async (rule: Rule) => {
-    const childCount = rule.children?.length || 0;
-    const message = childCount > 0
-      ? `This rule has ${childCount} child rule(s). Deleting it will also delete all children. Continue?`
-      : "Are you sure you want to delete this rule?";
+    const childCount = rule.children?.length || 0
+    const message =
+      childCount > 0
+        ? `This rule has ${childCount} child rule(s). Deleting it will also delete all children. Continue?`
+        : 'Are you sure you want to delete this rule?'
 
     if (confirm(message)) {
       try {
-        await deleteRule.mutateAsync(rule.id);
+        await deleteRule.mutateAsync(rule.id)
       } catch (error) {
-        console.error("Failed to delete rule:", error);
+        console.error('Failed to delete rule:', error)
       }
     }
-  };
+  }
 
   const handleDetachGlobalRule = async (rule: Rule) => {
-    if (confirm(`Are you sure you want to detach the global rule "${rule.globalRule?.name}"? This will convert it to a custom rule.`)) {
+    if (
+      confirm(
+        `Are you sure you want to detach the global rule "${rule.globalRule?.name}"? This will convert it to a custom rule.`
+      )
+    ) {
       try {
-        await updateRule.mutateAsync({ id: rule.id, data: { globalRuleId: null } });
+        await updateRule.mutateAsync({
+          id: rule.id,
+          data: { globalRuleId: null },
+        })
       } catch (error) {
-        console.error("Failed to detach global rule:", error);
+        console.error('Failed to detach global rule:', error)
       }
     }
-  };
+  }
 
   if (isLoading) {
-    return <div>Loading rules...</div>;
+    return <div>Loading rules...</div>
   }
 
   // Filter to get only top-level rules (no parent)
-  const topLevelRules = rules?.filter(r => r.parentId === null) || [];
+  const topLevelRules = rules?.data?.filter(r => r.parentId === null) || []
 
   if (topLevelRules.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
         No rules yet. Add your first rule to get started.
       </div>
-    );
+    )
   }
 
   const canHaveChildren = (dataType: string) => {
-    return dataType === "object" || dataType === "array";
-  };
+    return dataType === 'object' || dataType === 'array'
+  }
 
   const renderRule = (rule: Rule, level: number = 0): React.ReactElement[] => {
     // Find children from the full rules array instead of relying on rule.children
-    const children = rules?.filter(r => r.parentId === rule.id) || [];
-    const hasChildren = children.length > 0;
-    const indent = level * 32; // 32px per level
+    const children = rules?.data?.filter(r => r.parentId === rule.id) || []
+    const hasChildren = children.length > 0
+    const indent = level * 32 // 32px per level
 
-    const rows: React.ReactElement[] = [];
+    const rows: React.ReactElement[] = []
 
     // Add the current rule row
     rows.push(
       <tr key={rule.id} className="border-b hover:bg-gray-50">
         <td className="px-4 py-3" style={{ paddingLeft: `${indent + 16}px` }}>
           <div className="flex items-center gap-2">
-            {level > 0 && (
-              <span className="text-gray-400">└─</span>
-            )}
+            {level > 0 && <span className="text-gray-400">└─</span>}
             <div className="flex flex-col">
               <span>{rule.name}</span>
               {rule.globalRule && (
@@ -126,33 +135,28 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
             {rule.dataType}
           </code>
         </td>
-        <td className="px-4 py-3 text-gray-600">
-          {rule.description || "-"}
-        </td>
+        <td className="px-4 py-3 text-gray-600">{rule.description || '-'}</td>
         <td className="px-4 py-3">
           <div className="flex gap-2">
             {canHaveChildren(rule.dataType) && !rule.globalRule && (
               <AddRuleDialog
                 projectId={projectId}
                 parentId={rule.id}
-                parentDataType={rule.dataType as "object" | "array"}
+                parentDataType={rule.dataType as 'object' | 'array'}
                 workspaceId={workspaceId}
               />
             )}
-            {!rule.globalRule && (
-              <>
-                <EditRuleDialog ruleId={rule.id} />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(rule)}
-                  disabled={deleteRule.isPending}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  Delete
-                </Button>
-              </>
-            )}
+
+            <EditRuleDialog ruleId={rule.id} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDelete(rule)}
+              disabled={deleteRule.isPending}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              Delete
+            </Button>
             {rule.globalRule && (
               <span className="text-xs text-gray-500 italic">
                 Linked to global rule
@@ -161,17 +165,17 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
           </div>
         </td>
       </tr>
-    );
+    )
 
     // Add children rows recursively
     if (hasChildren) {
       children.forEach(child => {
-        rows.push(...renderRule(child, level + 1));
-      });
+        rows.push(...renderRule(child, level + 1))
+      })
     }
 
-    return rows;
-  };
+    return rows
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -186,10 +190,8 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
             <th className="px-4 py-3 text-left font-medium">Actions</th>
           </tr>
         </thead>
-        <tbody>
-          {topLevelRules.map(rule => renderRule(rule))}
-        </tbody>
+        <tbody>{topLevelRules.map(rule => renderRule(rule))}</tbody>
       </table>
     </div>
-  );
+  )
 }

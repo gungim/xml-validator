@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../lib/db";
-import { createUserSchema } from "../../lib/types/users";
-import { Role } from "@prisma/client";
+import { Role } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '../../lib/db'
+import { createUserSchema } from '../../lib/types/users'
 
 export async function GET(request: NextRequest) {
   try {
-    const roleFilter = request.nextUrl.searchParams.get("role");
+    const roleFilter = request.nextUrl.searchParams.get('role')
 
     const users = await prisma.user.findMany({
       where: roleFilter ? { role: roleFilter as Role } : undefined,
@@ -22,37 +22,37 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
-    });
+    })
 
-    return NextResponse.json({ users });
+    return NextResponse.json({ data: users, total: await prisma.user.count() })
   } catch (error) {
-    console.error("Error fetching users:", error);
+    console.error('Error fetching users:', error)
     return NextResponse.json(
-      { error: "Failed to fetch users" },
+      { error: 'Failed to fetch users' },
       { status: 500 }
-    );
+    )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json()
 
     // Validate request body
-    const validatedData = createUserSchema.parse(body);
+    const validatedData = createUserSchema.parse(body)
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email },
-    });
+    })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Email already exists" },
+        { error: 'Email already exists' },
         { status: 400 }
-      );
+      )
     }
 
     // Create user
@@ -70,22 +70,22 @@ export async function POST(request: NextRequest) {
           },
         },
       },
-    });
+    })
 
-    return NextResponse.json(user, { status: 201 });
+    return NextResponse.json({ data: user }, { status: 201 })
   } catch (error) {
-    console.error("Error creating user:", error);
-    
-    if (error instanceof Error && error.name === "ZodError") {
+    console.error('Error creating user:', error)
+
+    if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json(
-        { error: "Invalid request data", details: error },
+        { error: 'Invalid request data', details: error },
         { status: 400 }
-      );
+      )
     }
 
     return NextResponse.json(
-      { error: "Failed to create user" },
+      { error: 'Failed to create user' },
       { status: 500 }
-    );
+    )
   }
 }

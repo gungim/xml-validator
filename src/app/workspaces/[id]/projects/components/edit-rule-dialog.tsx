@@ -1,473 +1,520 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
+import { Button } from '@/components/ui/button'
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUpdateRule, useRule } from "../../../../lib/hooks/rules";
-import type { StringCondition, NumberCondition } from "../../../../lib/types/rules";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useForm } from '@tanstack/react-form'
+import { useEffect, useState } from 'react'
+import { z } from 'zod'
+import { useRule, useUpdateRule } from '../../../../lib/hooks/rules'
+import type {
+  NumberCondition,
+  StringCondition,
+} from '../../../../lib/types/rules'
 
 const ruleSchema = z.object({
-    name: z.string().min(1, "Rule name is required"),
-    path: z.string().min(1, "Path is required"),
-    dataType: z.string().min(1, "Data type is required"),
-    required: z.boolean(),
-});
+  name: z.string().min(1, 'Rule name is required'),
+  path: z.string().min(1, 'Path is required'),
+  dataType: z.string().min(1, 'Data type is required'),
+  required: z.boolean(),
+})
 
 interface EditRuleDialogProps {
-    ruleId: number;
+  ruleId: number
 }
 
 export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
-    const [open, setOpen] = useState(false);
-    const { data: rule, isLoading } = useRule(ruleId);
-    const updateRule = useUpdateRule();
+  const [open, setOpen] = useState(false)
+  const { data: rule, isLoading } = useRule(ruleId)
+  const updateRule = useUpdateRule()
+  console.log(rule)
+  const dataTypes = ['string', 'number', 'boolean', 'object', 'array']
 
-    const dataTypes = ["string", "number", "boolean", "object", "array"];
+  // Condition state
+  const [stringCondition, setStringCondition] = useState<
+    Partial<StringCondition>
+  >({
+    allowEmpty: true,
+  })
+  const [numberCondition, setNumberCondition] = useState<
+    Partial<NumberCondition>
+  >({})
 
-    // Condition state
-    const [stringCondition, setStringCondition] = useState<Partial<StringCondition>>({
-        allowEmpty: true,
-    });
-    const [numberCondition, setNumberCondition] = useState<Partial<NumberCondition>>({});
+  const [conditionError, setConditionError] = useState<string | null>(null)
 
-    const [conditionError, setConditionError] = useState<string | null>(null);
-
-    const form = useForm({
-        defaultValues: {
-            name: "",
-            path: "",
-            dataType: "string",
-            required: false,
-            description: "",
-        },
-        onSubmit: async ({ value }) => {
-            setConditionError(null);
-            try {
-                // Build condition based on dataType
-                let condition = {};
-                if (value.dataType === "string") {
-                    // Validate string conditions
-                    if (stringCondition.minLength !== undefined && stringCondition.maxLength !== undefined) {
-                        if (stringCondition.minLength > stringCondition.maxLength) {
-                            setConditionError("Min length cannot be greater than max length");
-                            return;
-                        }
-                    }
-
-                    condition = {
-                        maxLength: stringCondition.maxLength,
-                        minLength: stringCondition.minLength,
-                        allowEmpty: stringCondition.allowEmpty ?? true,
-                        pattern: stringCondition.pattern,
-                    };
-                } else if (value.dataType === "number") {
-                    // Validate number conditions
-                    if (numberCondition.min !== undefined && numberCondition.max !== undefined) {
-                        if (numberCondition.min > numberCondition.max) {
-                            setConditionError("Min value cannot be greater than max value");
-                            return;
-                        }
-                    }
-
-                    condition = {
-                        min: numberCondition.min,
-                        max: numberCondition.max,
-                    };
-                }
-
-                await updateRule.mutateAsync({
-                    id: ruleId,
-                    data: {
-                        name: value.name,
-                        path: value.path,
-                        dataType: value.dataType,
-                        required: value.required,
-                        description: value.description || null,
-                        condition,
-                    }
-                });
-                setOpen(false);
-                setConditionError(null);
-            } catch (error) {
-                console.error("Failed to update rule:", error);
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      path: '',
+      dataType: 'string',
+      required: false,
+      description: '',
+    },
+    onSubmit: async ({ value }) => {
+      setConditionError(null)
+      try {
+        // Build condition based on dataType
+        let condition = {}
+        if (value.dataType === 'string') {
+          // Validate string conditions
+          if (
+            stringCondition.minLength !== undefined &&
+            stringCondition.maxLength !== undefined
+          ) {
+            if (stringCondition.minLength > stringCondition.maxLength) {
+              setConditionError('Min length cannot be greater than max length')
+              return
             }
-        },
-    });
+          }
 
-    // Update form when rule data is loaded
-    useEffect(() => {
-        if (rule && open) {
-            form.setFieldValue("name", rule.name);
-            form.setFieldValue("path", rule.path);
-            form.setFieldValue("dataType", rule.dataType);
-            form.setFieldValue("required", rule.required);
-            form.setFieldValue("description", rule.description || "");
-
-            // Set conditions
-            const condition = rule.condition as any;
-            if (rule.dataType === "string") {
-                setStringCondition({
-                    maxLength: condition.maxLength,
-                    minLength: condition.minLength,
-                    allowEmpty: condition.allowEmpty ?? true,
-                    pattern: condition.pattern,
-                });
-            } else if (rule.dataType === "number") {
-                setNumberCondition({
-                    min: condition.min,
-                    max: condition.max,
-                });
+          condition = {
+            maxLength: stringCondition.maxLength,
+            minLength: stringCondition.minLength,
+            allowEmpty: stringCondition.allowEmpty ?? true,
+            pattern: stringCondition.pattern,
+          }
+        } else if (value.dataType === 'number') {
+          // Validate number conditions
+          if (
+            numberCondition.min !== undefined &&
+            numberCondition.max !== undefined
+          ) {
+            if (numberCondition.min > numberCondition.max) {
+              setConditionError('Min value cannot be greater than max value')
+              return
             }
+          }
+
+          condition = {
+            min: numberCondition.min,
+            max: numberCondition.max,
+          }
         }
-    }, [rule, open]);
 
-    const currentDataType = form.state.values.dataType;
-    const hasChildren = rule?.children && rule.children.length > 0;
-    const isLinkedToGlobalRule = rule?.globalRule !== null;
+        await updateRule.mutateAsync({
+          id: ruleId,
+          data: {
+            name: value.name,
+            path: value.path,
+            dataType: value.dataType,
+            required: value.required,
+            description: value.description || null,
+            condition,
+          },
+        })
+        setOpen(false)
+        setConditionError(null)
+      } catch (error) {
+        console.error('Failed to update rule:', error)
+      }
+    },
+  })
 
-    // Cannot change dataType if rule has children
-    const canChangeDataType = !hasChildren;
+  // Update form when rule data is loaded
+  useEffect(() => {
+    if (rule && rule.data && open) {
+      form.setFieldValue('name', rule.data.name)
+      form.setFieldValue('path', rule.data.path)
+      form.setFieldValue('dataType', rule.data.dataType)
+      form.setFieldValue('required', rule.data.required)
+      form.setFieldValue('description', rule.data.description || '')
 
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                    Edit
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Edit Rule</DialogTitle>
-                    <DialogDescription>
-                        Update the validation rule settings.
-                    </DialogDescription>
-                </DialogHeader>
-                {isLoading ? (
-                    <div>Loading rule data...</div>
-                ) : (
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            form.handleSubmit();
-                        }}
-                        className="space-y-4"
-                    >
-                        {hasChildren && (
-                            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                                ⚠️ This rule has child rules. Data type cannot be changed.
-                            </div>
-                        )}
+      // Set conditions
+      const condition = rule.data.condition as any
+      if (rule.data.dataType === 'string') {
+        setStringCondition({
+          maxLength: condition.maxLength,
+          minLength: condition.minLength,
+          allowEmpty: condition.allowEmpty ?? true,
+          pattern: condition.pattern,
+        })
+      } else if (rule.data.dataType === 'number') {
+        setNumberCondition({
+          min: condition.min,
+          max: condition.max,
+        })
+      }
+    }
+  }, [rule, open])
 
-                        {isLinkedToGlobalRule && (
-                            <div className="p-3 bg-orange-50 border border-orange-300 rounded text-sm text-orange-900">
-                                🌐 This rule is linked to global rule "{rule.globalRule.name}".
-                                <br />
-                                <strong>Editing is disabled.</strong> To modify, either:
-                                <ul className="list-disc ml-5 mt-1">
-                                    <li>Detach from global rule using the "Detach" button in the rules table</li>
-                                    <li>Edit the global rule itself (changes will cascade to all linked rules)</li>
-                                </ul>
-                            </div>
-                        )}
+  const currentDataType = form.state.values.dataType
+  const hasChildren = rule?.data.children && rule.data.children.length > 0
+  const isLinkedToGlobalRule = rule?.data?.globalRuleId !== null
 
-                        <form.Field
-                            name="name"
-                            validators={{
-                                onChange: ({ value }) => {
-                                    const result = ruleSchema.shape.name.safeParse(value);
-                                    if (!result.success) {
-                                        return result.error.issues[0].message;
-                                    }
-                                    return undefined;
-                                },
-                            }}
-                        >
-                            {(field) => (
-                                <div className="space-y-2">
-                                    <Label htmlFor={field.name}>Rule Name</Label>
-                                    <Input
-                                        id={field.name}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                        placeholder="Enter rule name"
-                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                    />
-                                    {field.state.meta.errors.length > 0 && (
-                                        <p className="text-sm text-red-500">
-                                            {field.state.meta.errors[0]}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </form.Field>
+  // Cannot change dataType if rule has children
+  const canChangeDataType = !hasChildren
 
-                        <form.Field
-                            name="path"
-                            validators={{
-                                onChange: ({ value }) => {
-                                    const result = ruleSchema.shape.path.safeParse(value);
-                                    if (!result.success) {
-                                        return result.error.issues[0].message;
-                                    }
-                                    return undefined;
-                                },
-                            }}
-                        >
-                            {(field) => (
-                                <div className="space-y-2">
-                                    <Label htmlFor={field.name}>Path</Label>
-                                    <Input
-                                        id={field.name}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                        placeholder="e.g., user.email"
-                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                    />
-                                    {field.state.meta.errors.length > 0 && (
-                                        <p className="text-sm text-red-500">
-                                            {field.state.meta.errors[0]}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </form.Field>
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          Edit
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Rule</DialogTitle>
+          <DialogDescription>
+            Update the validation rule settings.
+          </DialogDescription>
+        </DialogHeader>
+        {isLoading ? (
+          <div>Loading rule data...</div>
+        ) : (
+          <form
+            onSubmit={e => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+            className="space-y-4"
+          >
+            {hasChildren && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                ⚠️ This rule has child rules. Data type cannot be changed.
+              </div>
+            )}
 
-                        <form.Field
-                            name="dataType"
-                            validators={{
-                                onChange: ({ value }) => {
-                                    const result = ruleSchema.shape.dataType.safeParse(value);
-                                    if (!result.success) {
-                                        return result.error.issues[0].message;
-                                    }
-                                    return undefined;
-                                },
-                            }}
-                        >
-                            {(field) => (
-                                <div className="space-y-2">
-                                    <Label htmlFor={field.name}>Data Type</Label>
-                                    <Select
-                                        value={field.state.value}
-                                        onValueChange={(value) => {
-                                            field.handleChange(value);
-                                            // Reset conditions when dataType changes
-                                            setStringCondition({ allowEmpty: true });
-                                            setNumberCondition({});
-                                        }}
-                                        disabled={updateRule.isPending || !canChangeDataType || isLinkedToGlobalRule}
-                                    >
-                                        <SelectTrigger id={field.name} className="w-full">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {dataTypes.map((type) => (
-                                                <SelectItem key={type} value={type}>
-                                                    {type}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {field.state.meta.errors.length > 0 && (
-                                        <p className="text-sm text-red-500">
-                                            {field.state.meta.errors[0]}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </form.Field>
+            {isLinkedToGlobalRule && (
+              <div className="p-3 bg-orange-50 border border-orange-300 rounded text-sm text-orange-900">
+                🌐 This rule is linked to global rule "
+                <br />
+                <strong>Editing is disabled.</strong> To modify, either:
+                <ul className="list-disc ml-5 mt-1">
+                  <li>
+                    Detach from global rule using the "Detach" button in the
+                    rules table
+                  </li>
+                  <li>
+                    Edit the global rule itself (changes will cascade to all
+                    linked rules)
+                  </li>
+                </ul>
+              </div>
+            )}
 
-                        <form.Field name="required">
-                            {(field) => (
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id={field.name}
-                                        name={field.name}
-                                        checked={field.state.value}
-                                        onChange={(e) => field.handleChange(e.target.checked)}
-                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                        className="h-4 w-4"
-                                    />
-                                    <Label htmlFor={field.name} className="cursor-pointer">
-                                        Required field
-                                    </Label>
-                                </div>
-                            )}
-                        </form.Field>
+            <form.Field
+              name="name"
+              validators={{
+                onChange: ({ value }) => {
+                  const result = ruleSchema.shape.name.safeParse(value)
+                  if (!result.success) {
+                    return result.error.issues[0].message
+                  }
+                  return undefined
+                },
+              }}
+            >
+              {field => (
+                <div className="space-y-2">
+                  <Label htmlFor={field.name}>Rule Name</Label>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder="Enter rule name"
+                    disabled={updateRule.isPending}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-red-500">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </div>
+              )}
+            </form.Field>
 
-                        <form.Field name="description">
-                            {(field) => (
-                                <div className="space-y-2">
-                                    <Label htmlFor={field.name}>Description (Optional)</Label>
-                                    <Input
-                                        id={field.name}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                        placeholder="Optional description"
-                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                    />
-                                </div>
-                            )}
-                        </form.Field>
+            <form.Field
+              name="path"
+              validators={{
+                onChange: ({ value }) => {
+                  const result = ruleSchema.shape.path.safeParse(value)
+                  if (!result.success) {
+                    return result.error.issues[0].message
+                  }
+                  return undefined
+                },
+              }}
+            >
+              {field => (
+                <div className="space-y-2">
+                  <Label htmlFor={field.name}>Path</Label>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder="e.g., user.email"
+                    disabled={updateRule.isPending}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-red-500">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </div>
+              )}
+            </form.Field>
 
-                        {/* String Conditions */}
-                        {currentDataType === "string" && (
-                            <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
-                                <h4 className="font-medium text-sm">String Validation</h4>
+            <form.Field
+              name="dataType"
+              validators={{
+                onChange: ({ value }) => {
+                  const result = ruleSchema.shape.dataType.safeParse(value)
+                  if (!result.success) {
+                    return result.error.issues[0].message
+                  }
+                  return undefined
+                },
+              }}
+            >
+              {field => (
+                <div className="space-y-2">
+                  <Label htmlFor={field.name}>Data Type</Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={value => {
+                      field.handleChange(value)
+                      // Reset conditions when dataType changes
+                      setStringCondition({ allowEmpty: true })
+                      setNumberCondition({})
+                    }}
+                    disabled={
+                      updateRule.isPending ||
+                      !canChangeDataType ||
+                      isLinkedToGlobalRule
+                    }
+                  >
+                    <SelectTrigger id={field.name} className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dataTypes.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-red-500">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </div>
+              )}
+            </form.Field>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="minLength">Min Length</Label>
-                                        <Input
-                                            id="minLength"
-                                            type="number"
-                                            min="0"
-                                            value={stringCondition.minLength ?? ""}
-                                            onChange={(e) => setStringCondition({
-                                                ...stringCondition,
-                                                minLength: e.target.value ? Number(e.target.value) : undefined
-                                            })}
-                                            placeholder="e.g., 5"
-                                            disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                        />
-                                    </div>
+            <form.Field name="required">
+              {field => (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={field.name}
+                    name={field.name}
+                    checked={field.state.value}
+                    onChange={e => field.handleChange(e.target.checked)}
+                    disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor={field.name} className="cursor-pointer">
+                    Required field
+                  </Label>
+                </div>
+              )}
+            </form.Field>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="maxLength">Max Length</Label>
-                                        <Input
-                                            id="maxLength"
-                                            type="number"
-                                            min="0"
-                                            value={stringCondition.maxLength ?? ""}
-                                            onChange={(e) => setStringCondition({
-                                                ...stringCondition,
-                                                maxLength: e.target.value ? Number(e.target.value) : undefined
-                                            })}
-                                            placeholder="e.g., 255"
-                                            disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                        />
-                                    </div>
-                                </div>
+            <form.Field name="description">
+              {field => (
+                <div className="space-y-2">
+                  <Label htmlFor={field.name}>Description (Optional)</Label>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder="Optional description"
+                    disabled={updateRule.isPending || isLinkedToGlobalRule}
+                  />
+                </div>
+              )}
+            </form.Field>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="pattern">Regex Pattern</Label>
-                                    <Input
-                                        id="pattern"
-                                        value={stringCondition.pattern ?? ""}
-                                        onChange={(e) => setStringCondition({
-                                            ...stringCondition,
-                                            pattern: e.target.value || undefined
-                                        })}
-                                        placeholder="e.g., ^[a-zA-Z0-9]+$"
-                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                    />
-                                </div>
+            {/* String Conditions */}
+            {currentDataType === 'string' && (
+              <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
+                <h4 className="font-medium text-sm">String Validation</h4>
 
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id="allowEmpty"
-                                        checked={stringCondition.allowEmpty ?? true}
-                                        onChange={(e) => setStringCondition({
-                                            ...stringCondition,
-                                            allowEmpty: e.target.checked
-                                        })}
-                                        disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                        className="h-4 w-4"
-                                    />
-                                    <Label htmlFor="allowEmpty" className="cursor-pointer">
-                                        Allow empty string
-                                    </Label>
-                                </div>
-                            </div>
-                        )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="minLength">Min Length</Label>
+                    <Input
+                      id="minLength"
+                      type="number"
+                      min="0"
+                      value={stringCondition.minLength ?? ''}
+                      onChange={e =>
+                        setStringCondition({
+                          ...stringCondition,
+                          minLength: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      placeholder="e.g., 5"
+                      disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    />
+                  </div>
 
-                        {/* Number Conditions */}
-                        {currentDataType === "number" && (
-                            <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
-                                <h4 className="font-medium text-sm">Number Validation</h4>
+                  <div className="space-y-2">
+                    <Label htmlFor="maxLength">Max Length</Label>
+                    <Input
+                      id="maxLength"
+                      type="number"
+                      min="0"
+                      value={stringCondition.maxLength ?? ''}
+                      onChange={e =>
+                        setStringCondition({
+                          ...stringCondition,
+                          maxLength: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      placeholder="e.g., 255"
+                      disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    />
+                  </div>
+                </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="min">Minimum Value</Label>
-                                        <Input
-                                            id="min"
-                                            type="number"
-                                            value={numberCondition.min ?? ""}
-                                            onChange={(e) => setNumberCondition({
-                                                ...numberCondition,
-                                                min: e.target.value ? Number(e.target.value) : undefined
-                                            })}
-                                            placeholder="e.g., 0"
-                                            disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                        />
-                                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pattern">Regex Pattern</Label>
+                  <Input
+                    id="pattern"
+                    value={stringCondition.pattern ?? ''}
+                    onChange={e =>
+                      setStringCondition({
+                        ...stringCondition,
+                        pattern: e.target.value || undefined,
+                      })
+                    }
+                    placeholder="e.g., ^[a-zA-Z0-9]+$"
+                    disabled={updateRule.isPending || isLinkedToGlobalRule}
+                  />
+                </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="max">Maximum Value</Label>
-                                        <Input
-                                            id="max"
-                                            type="number"
-                                            value={numberCondition.max ?? ""}
-                                            onChange={(e) => setNumberCondition({
-                                                ...numberCondition,
-                                                max: e.target.value ? Number(e.target.value) : undefined
-                                            })}
-                                            placeholder="e.g., 100"
-                                            disabled={updateRule.isPending || isLinkedToGlobalRule}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="allowEmpty"
+                    checked={stringCondition.allowEmpty ?? true}
+                    onChange={e =>
+                      setStringCondition({
+                        ...stringCondition,
+                        allowEmpty: e.target.checked,
+                      })
+                    }
+                    disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="allowEmpty" className="cursor-pointer">
+                    Allow empty string
+                  </Label>
+                </div>
+              </div>
+            )}
 
-                        {conditionError && (
-                            <p className="text-sm text-red-500">
-                                {conditionError}
-                            </p>
-                        )}
+            {/* Number Conditions */}
+            {currentDataType === 'number' && (
+              <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
+                <h4 className="font-medium text-sm">Number Validation</h4>
 
-                        {updateRule.isError && (
-                            <p className="text-sm text-red-500">
-                                Failed to update rule. Please try again.
-                            </p>
-                        )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="min">Minimum Value</Label>
+                    <Input
+                      id="min"
+                      type="number"
+                      value={numberCondition.min ?? ''}
+                      onChange={e =>
+                        setNumberCondition({
+                          ...numberCondition,
+                          min: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      placeholder="e.g., 0"
+                      disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    />
+                  </div>
 
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setOpen(false)}
-                                disabled={updateRule.isPending}
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={updateRule.isPending || isLinkedToGlobalRule}>
-                                {updateRule.isPending ? "Updating..." : "Update Rule"}
-                            </Button>
-                        </div>
-                    </form>
-                )}
-            </DialogContent>
-        </Dialog>
-    );
+                  <div className="space-y-2">
+                    <Label htmlFor="max">Maximum Value</Label>
+                    <Input
+                      id="max"
+                      type="number"
+                      value={numberCondition.max ?? ''}
+                      onChange={e =>
+                        setNumberCondition({
+                          ...numberCondition,
+                          max: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      placeholder="e.g., 100"
+                      disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {conditionError && (
+              <p className="text-sm text-red-500">{conditionError}</p>
+            )}
+
+            {updateRule.isError && (
+              <p className="text-sm text-red-500">
+                Failed to update rule. Please try again.
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={updateRule.isPending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateRule.isPending}>
+                {updateRule.isPending ? 'Updating...' : 'Update Rule'}
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
 }

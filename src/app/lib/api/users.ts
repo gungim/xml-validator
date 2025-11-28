@@ -5,17 +5,22 @@ import {
   UpdateUserRequest,
   UserWithPermissions,
 } from '../types/users'
+import { ApiSuccessResponse } from './response'
 
 export async function getUsers(
   role?: string
-): Promise<{ users: UserWithPermissions[] }> {
+): Promise<ApiSuccessResponse<UserWithPermissions[]>> {
   const url = role ? `/api/users?role=${role}` : '/api/users'
   const res = await fetch(url)
   if (!res.ok) throw new Error('Failed to fetch users')
-  return res.json()
+  const result = await res.json()
+  // Wrapped format: {data: users, total: number}
+  return result
 }
 
-export async function createUser(input: CreateUserRequest): Promise<User> {
+export async function createUser(
+  input: CreateUserRequest
+): Promise<ApiSuccessResponse<User>> {
   const res = await fetch(`/api/users`, {
     method: 'POST',
     headers: {
@@ -24,13 +29,14 @@ export async function createUser(input: CreateUserRequest): Promise<User> {
     body: JSON.stringify(input),
   })
   if (!res.ok) throw new Error('Failed to create user')
-  return res.json()
+  const result = await res.json()
+  return result
 }
 
 export async function updateUser(
   id: string,
   input: UpdateUserRequest
-): Promise<User> {
+): Promise<ApiSuccessResponse<User>> {
   const res = await fetch(`/api/users/${id}`, {
     method: 'PUT',
     headers: {
@@ -39,21 +45,25 @@ export async function updateUser(
     body: JSON.stringify(input),
   })
   if (!res.ok) throw new Error('Failed to update user')
-  return res.json()
+  const result = await res.json()
+  return result
 }
 
-export async function deleteUser(id: string) {
+export async function deleteUser(
+  id: string
+): Promise<ApiSuccessResponse<User>> {
   const res = await fetch(`/api/users/${id}`, {
     method: 'DELETE',
   })
   if (!res.ok) throw new Error('Failed to delete user')
-  return res.json()
+  const result = await res.json()
+  return result
 }
 
 export async function assignPermission(
   userId: string,
   input: AssignPermissionRequest
-) {
+): Promise<ApiSuccessResponse<User>> {
   const response = await fetch(`/api/users/${userId}/permissions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -65,10 +75,14 @@ export async function assignPermission(
     throw new Error(error.error || 'Failed to assign permission')
   }
 
-  return response.json()
+  const result = await response.json()
+  return result
 }
 
-export async function removePermission(workspaceId: string, userId: string) {
+export async function removePermission(
+  workspaceId: string,
+  userId: string
+): Promise<ApiSuccessResponse<User>> {
   const response = await fetch(
     `/api/users/${userId}/permissions?workspaceId=${workspaceId}`,
     { method: 'DELETE' }
@@ -78,5 +92,6 @@ export async function removePermission(workspaceId: string, userId: string) {
     const error = await response.json()
     throw new Error(error.error || 'Failed to remove permission')
   }
-  return response.json()
+  const result = await response.json()
+  return result
 }

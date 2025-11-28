@@ -87,7 +87,7 @@ export default function UsersPage() {
         </div>
       ) : (
         <UserList
-          users={data?.users || []}
+          users={data?.data || []}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onManagePermissions={handleManagePermissions}

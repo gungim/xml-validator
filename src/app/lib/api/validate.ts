@@ -1,10 +1,11 @@
 import { ValidationResult } from '../validation/xml-validator'
+import { ApiSuccessResponse } from './response'
 
 export const validate = async (
   endpointSlug: string,
   xml: string,
   endpointSecret: string
-): Promise<ValidationResult> => {
+): Promise<ApiSuccessResponse<ValidationResult>> => {
   const response = await fetch(`/api/validate/${endpointSlug}`, {
     method: 'POST',
     headers: {

@@ -89,13 +89,13 @@ export function TestValidationDialog({
           {validationResult && (
             <div
               className={`rounded-md border p-4 ${
-                validationResult.isValid
+                validationResult?.data?.isValid
                   ? 'border-green-200 bg-green-50'
                   : 'border-red-200 bg-red-50'
               }`}
             >
               <div className="flex items-start gap-2 mb-3">
-                {validationResult.isValid ? (
+                {validationResult?.data?.isValid ? (
                   <>
                     <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                     <div>
@@ -115,38 +115,41 @@ export function TestValidationDialog({
                         Validation Failed
                       </div>
                       <div className="text-sm text-red-700 mb-3">
-                        Found {validationResult.errors?.length || 0} error(s):
+                        Found {validationResult?.data?.errors?.length || 0}{' '}
+                        error(s):
                       </div>
 
-                      {validationResult.errors &&
-                        validationResult.errors.length > 0 && (
+                      {validationResult?.data?.errors &&
+                        validationResult?.data?.errors.length > 0 && (
                           <div className="space-y-2">
-                            {validationResult.errors.map((error, index) => (
-                              <div
-                                key={index}
-                                className="bg-white rounded border border-red-200 p-3"
-                              >
-                                <div className="text-sm">
-                                  <div className="font-medium text-red-900 mb-1">
-                                    Path:{' '}
-                                    <code className="bg-red-100 px-1.5 py-0.5 rounded text-xs">
-                                      {error.path}
-                                    </code>
-                                  </div>
-                                  <div className="text-red-800 mb-1">
-                                    {error.message}
-                                  </div>
-                                  {error.value && (
-                                    <div className="text-xs text-red-600">
-                                      Value:{' '}
-                                      <code className="bg-red-100 px-1.5 py-0.5 rounded">
-                                        {error.value}
+                            {validationResult?.data?.errors.map(
+                              (error, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-white rounded border border-red-200 p-3"
+                                >
+                                  <div className="text-sm">
+                                    <div className="font-medium text-red-900 mb-1">
+                                      Path:{' '}
+                                      <code className="bg-red-100 px-1.5 py-0.5 rounded text-xs">
+                                        {error.path}
                                       </code>
                                     </div>
-                                  )}
+                                    <div className="text-red-800 mb-1">
+                                      {error.message}
+                                    </div>
+                                    {error.value && (
+                                      <div className="text-xs text-red-600">
+                                        Value:{' '}
+                                        <code className="bg-red-100 px-1.5 py-0.5 rounded">
+                                          {error.value}
+                                        </code>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              )
+                            )}
                           </div>
                         )}
                     </div>

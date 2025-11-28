@@ -1,8 +1,6 @@
-"use client";
+'use client'
 
-import { useMemo, useState } from "react";
-import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -10,65 +8,76 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useCreateProject } from "../../lib/hooks/projects";
-import { CreateProjectResponse } from "../../lib/types/projects";
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useForm } from '@tanstack/react-form'
+import { useMemo, useState } from 'react'
+import { z } from 'zod'
+import { useCreateProject } from '../../lib/hooks/projects'
+import { CreateProjectResponse } from '../../lib/types/projects'
 
 const projectSchema = z.object({
-  name: z.string().min(1, "Project name is required").trim(),
+  name: z.string().min(1, 'Project name is required').trim(),
   endpointSlug: z
     .string()
-    .min(1, "Endpoint slug is required")
-    .max(64, "Slug must be 64 characters or fewer")
-    .regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and dashes only"),
+    .min(1, 'Endpoint slug is required')
+    .max(64, 'Slug must be 64 characters or fewer')
+    .regex(/^[a-z0-9-]+$/, 'Use lowercase letters, numbers, and dashes only'),
   description: z.string().optional(),
-});
+})
 
 interface CreateProjectDialogProps {
-  workspaceId: string;
+  workspaceId: string
 }
 
 export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [latestProject, setLatestProject] = useState<CreateProjectResponse | null>(null);
-  const createProject = useCreateProject();
+  const [open, setOpen] = useState(false)
+  const [latestProject, setLatestProject] =
+    useState<CreateProjectResponse | null>(null)
+  const {
+    mutateAsync: createProject,
+    data,
+    isPending,
+    error,
+  } = useCreateProject()
   const slugPlaceholder = useMemo(
     () => `workspace-${Math.floor(Math.random() * 1_000)}`,
-    [],
-  );
+    []
+  )
 
   const normalizeSlug = (value: string) =>
     value
       .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "-")
-      .replace(/--+/g, "-")
-      .replace(/^-+|-+$/g, "");
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/--+/g, '-')
+      .replace(/^-+|-+$/g, '')
 
   const form = useForm({
     defaultValues: {
-      name: "",
-      description: "",
-      endpointSlug: "",
+      name: '',
+      description: '',
+      endpointSlug: '',
     },
     onSubmit: async ({ value }) => {
       try {
-        const result = await createProject.mutateAsync({
+        createProject({
           name: value.name,
           workspaceId,
           description: value.description || undefined,
           endpointSlug: value.endpointSlug,
-        });
-        setLatestProject(result);
-        setOpen(false);
-        form.reset();
+        }).then(result => {
+          if (result.data) {
+            setLatestProject(result.data)
+          }
+          setOpen(false)
+          form.reset()
+        })
       } catch (error) {
-        console.error("Failed to create project:", error);
+        console.error('Failed to create project:', error)
       }
     },
-  });
+  })
 
   return (
     <>
@@ -84,10 +93,10 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
             </DialogDescription>
           </DialogHeader>
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              form.handleSubmit();
+            onSubmit={e => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
             }}
             className="space-y-4"
           >
@@ -95,15 +104,15 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
               name="name"
               validators={{
                 onChange: ({ value }) => {
-                  const result = projectSchema.shape.name.safeParse(value);
+                  const result = projectSchema.shape.name.safeParse(value)
                   if (!result.success) {
-                    return result.error.issues[0].message;
+                    return result.error.issues[0].message
                   }
-                  return undefined;
+                  return undefined
                 },
               }}
             >
-              {(field) => (
+              {field => (
                 <div className="space-y-2">
                   <Label htmlFor={field.name}>Project Name</Label>
                   <Input
@@ -111,9 +120,9 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={e => field.handleChange(e.target.value)}
                     placeholder="Enter project name"
-                    disabled={createProject.isPending}
+                    disabled={isPending}
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-red-500">
@@ -128,15 +137,16 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
               name="endpointSlug"
               validators={{
                 onChange: ({ value }) => {
-                  const result = projectSchema.shape.endpointSlug.safeParse(value);
+                  const result =
+                    projectSchema.shape.endpointSlug.safeParse(value)
                   if (!result.success) {
-                    return result.error.issues[0].message;
+                    return result.error.issues[0].message
                   }
-                  return undefined;
+                  return undefined
                 },
               }}
             >
-              {(field) => (
+              {field => (
                 <div className="space-y-2">
                   <Label htmlFor={field.name}>Endpoint Slug</Label>
                   <Input
@@ -144,12 +154,17 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(normalizeSlug(e.target.value))}
+                    onChange={e =>
+                      field.handleChange(normalizeSlug(e.target.value))
+                    }
                     placeholder={slugPlaceholder}
-                    disabled={createProject.isPending}
+                    disabled={isPending}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Final URL: <code>/api/validate/{field.state.value || slugPlaceholder}</code>
+                    Final URL:{' '}
+                    <code>
+                      /api/validate/{field.state.value || slugPlaceholder}
+                    </code>
                   </p>
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-red-500">
@@ -161,7 +176,7 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
             </form.Field>
 
             <form.Field name="description">
-              {(field) => (
+              {field => (
                 <div className="space-y-2">
                   <Label htmlFor={field.name}>Description (Optional)</Label>
                   <Input
@@ -169,15 +184,15 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={e => field.handleChange(e.target.value)}
                     placeholder="Enter project description"
-                    disabled={createProject.isPending}
+                    disabled={isPending}
                   />
                 </div>
               )}
             </form.Field>
 
-            {createProject.isError && (
+            {error && (
               <p className="text-sm text-red-500">
                 Failed to create project. Please try again.
               </p>
@@ -188,12 +203,12 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
-                disabled={createProject.isPending}
+                disabled={isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={createProject.isPending}>
-                {createProject.isPending ? "Creating..." : "Create"}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? 'Creating...' : 'Create'}
               </Button>
             </div>
           </form>
@@ -209,12 +224,12 @@ export function CreateProjectDialog({ workspaceId }: CreateProjectDialogProps) {
               URL: <code>/api/validate/{latestProject.endpointSlug}</code>
             </div>
             <div>
-              Header <code>X-API-Key</code>:{" "}
+              Header <code>X-API-Key</code>:{' '}
               <code className="break-all">{latestProject.endpointSecret}</code>
             </div>
           </div>
         </div>
       )}
     </>
-  );
+  )
 }

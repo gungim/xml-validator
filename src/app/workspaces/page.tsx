@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import WorkspaceForm from "./components/workspace-form";
-import WorkspaceList from "./components/workspace-list";
-import { useWorkspaces } from "../lib/hooks/workspaces";
+import { useWorkspaces } from '../lib/hooks/workspaces'
+import WorkspaceForm from './components/workspace-form'
+import WorkspaceList from './components/workspace-list'
 
 export default function WorkspacesPage() {
-  const { data: workspaces, isLoading } = useWorkspaces();
+  const { data: workspaces, isLoading } = useWorkspaces()
 
-  const handleSaved = () => {};
+  const handleSaved = () => {}
 
   return (
     <div className="max-w-xl mx-auto p-6 space-y-6">
@@ -15,7 +15,7 @@ export default function WorkspacesPage() {
 
       <WorkspaceForm onSaved={handleSaved} />
 
-      <WorkspaceList workspaces={workspaces || []} onRefetch={() => {}} />
+      <WorkspaceList workspaces={workspaces?.data || []} onRefetch={() => {}} />
     </div>
-  );
+  )
 }

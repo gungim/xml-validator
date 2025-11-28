@@ -1,8 +1,6 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -10,29 +8,31 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useUpdateProject } from "../../../../lib/hooks/projects";
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useForm } from '@tanstack/react-form'
+import { useState } from 'react'
+import { z } from 'zod'
+import { useUpdateProject } from '../../../../lib/hooks/projects'
 
 const projectSchema = z.object({
-  name: z.string().min(1, "Project name is required").trim(),
+  name: z.string().min(1, 'Project name is required').trim(),
   endpointSlug: z
     .string()
-    .min(1, "Endpoint slug is required")
-    .max(64, "Slug must be 64 characters or fewer")
-    .regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and dashes only"),
+    .min(1, 'Endpoint slug is required')
+    .max(64, 'Slug must be 64 characters or fewer')
+    .regex(/^[a-z0-9-]+$/, 'Use lowercase letters, numbers, and dashes only'),
   description: z.string().optional(),
-});
+})
 
 interface EditProjectDialogProps {
-  projectId: string;
-  currentName: string;
-  currentDescription?: string | null;
-  currentSlug: string;
-  workspaceId: string;
-  endpointSecret: string;
+  projectId: string
+  currentName: string
+  currentDescription?: string | null
+  currentSlug: string
+  workspaceId: string
+  endpointSecret: string
 }
 
 export function EditProjectDialog({
@@ -43,40 +43,41 @@ export function EditProjectDialog({
   workspaceId,
   endpointSecret,
 }: EditProjectDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [secret, setSecret] = useState(endpointSecret);
-  const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
-  const updateProject = useUpdateProject(workspaceId);
+  const [open, setOpen] = useState(false)
+  const [secret, setSecret] = useState(endpointSecret)
+  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
+  const {
+    mutateAsync: updateProject,
+    isPending,
+    error,
+  } = useUpdateProject(workspaceId)
 
   const normalizeSlug = (value: string) =>
     value
       .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "-")
-      .replace(/--+/g, "-")
-      .replace(/^-+|-+$/g, "");
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/--+/g, '-')
+      .replace(/^-+|-+$/g, '')
 
   const form = useForm({
     defaultValues: {
       name: currentName,
-      description: currentDescription || "",
+      description: currentDescription || '',
       endpointSlug: currentSlug,
     },
     onSubmit: async ({ value }) => {
-      try {
-        await updateProject.mutateAsync({
-          projectId,
-          input: {
-            name: value.name,
-            description: value.description || undefined,
-            endpointSlug: value.endpointSlug,
-          },
-        });
-        setOpen(false);
-      } catch (error) {
-        console.error("Failed to update project:", error);
-      }
+      updateProject({
+        projectId,
+        input: {
+          name: value.name,
+          description: value.description || undefined,
+          endpointSlug: value.endpointSlug,
+        },
+      }).then(() => {
+        setOpen(false)
+      })
     },
-  });
+  })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -91,10 +92,10 @@ export function EditProjectDialog({
           </DialogDescription>
         </DialogHeader>
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
+          onSubmit={e => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
           }}
           className="space-y-4"
         >
@@ -102,15 +103,15 @@ export function EditProjectDialog({
             name="name"
             validators={{
               onChange: ({ value }) => {
-                const result = projectSchema.shape.name.safeParse(value);
+                const result = projectSchema.shape.name.safeParse(value)
                 if (!result.success) {
-                  return result.error.issues[0].message;
+                  return result.error.issues[0].message
                 }
-                return undefined;
+                return undefined
               },
             }}
           >
-            {(field) => (
+            {field => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Project Name</Label>
                 <Input
@@ -118,8 +119,8 @@ export function EditProjectDialog({
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  disabled={updateProject.isPending}
+                  onChange={e => field.handleChange(e.target.value)}
+                  disabled={isPending}
                 />
                 {field.state.meta.errors.length > 0 && (
                   <p className="text-sm text-red-500">
@@ -134,15 +135,15 @@ export function EditProjectDialog({
             name="endpointSlug"
             validators={{
               onChange: ({ value }) => {
-                const result = projectSchema.shape.endpointSlug.safeParse(value);
+                const result = projectSchema.shape.endpointSlug.safeParse(value)
                 if (!result.success) {
-                  return result.error.issues[0].message;
+                  return result.error.issues[0].message
                 }
-                return undefined;
+                return undefined
               },
             }}
           >
-            {(field) => (
+            {field => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Endpoint Slug</Label>
                 <Input
@@ -150,8 +151,10 @@ export function EditProjectDialog({
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(normalizeSlug(e.target.value))}
-                  disabled={updateProject.isPending}
+                  onChange={e =>
+                    field.handleChange(normalizeSlug(e.target.value))
+                  }
+                  disabled={isPending}
                 />
                 <p className="text-xs text-muted-foreground">
                   Endpoint: <code>/api/validate/{field.state.value}</code>
@@ -166,7 +169,7 @@ export function EditProjectDialog({
           </form.Field>
 
           <form.Field name="description">
-            {(field) => (
+            {field => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Description (Optional)</Label>
                 <Input
@@ -174,15 +177,15 @@ export function EditProjectDialog({
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={e => field.handleChange(e.target.value)}
                   placeholder="Enter project description"
-                  disabled={updateProject.isPending}
+                  disabled={isPending}
                 />
               </div>
             )}
           </form.Field>
 
-          {updateProject.isError && (
+          {error && (
             <p className="text-sm text-red-500">
               Failed to update project. Please try again.
             </p>
@@ -191,7 +194,8 @@ export function EditProjectDialog({
           <div className="rounded border p-3 space-y-2">
             <div className="text-sm font-medium">API Access</div>
             <p className="text-xs text-muted-foreground">
-              Provide this header when calling <code>/api/validate/{form.state.values.endpointSlug}</code>
+              Provide this header when calling{' '}
+              <code>/api/validate/{form.state.values.endpointSlug}</code>
             </p>
             <div className="flex gap-2">
               <Input readOnly value={secret} className="font-mono text-sm" />
@@ -199,15 +203,18 @@ export function EditProjectDialog({
                 type="button"
                 variant="outline"
                 onClick={async () => {
-                  if (typeof navigator === "undefined" || !navigator.clipboard) {
-                    return;
+                  if (
+                    typeof navigator === 'undefined' ||
+                    !navigator.clipboard
+                  ) {
+                    return
                   }
-                  await navigator.clipboard.writeText(secret);
-                  setCopyState("copied");
-                  setTimeout(() => setCopyState("idle"), 2000);
+                  await navigator.clipboard.writeText(secret)
+                  setCopyState('copied')
+                  setTimeout(() => setCopyState('idle'), 2000)
                 }}
               >
-                {copyState === "copied" ? "Copied" : "Copy"}
+                {copyState === 'copied' ? 'Copied' : 'Copy'}
               </Button>
             </div>
             <Button
@@ -215,26 +222,23 @@ export function EditProjectDialog({
               variant="destructive"
               onClick={async () => {
                 if (
-                  typeof window !== "undefined" &&
+                  typeof window !== 'undefined' &&
                   !window.confirm(
-                    "Regenerate secret? Existing clients will lose access.",
+                    'Regenerate secret? Existing clients will lose access.'
                   )
                 ) {
-                  return;
+                  return
                 }
-                try {
-                  const updated = await updateProject.mutateAsync({
-                    projectId,
-                    input: { regenerateSecret: true },
-                  });
-                  if (updated?.endpointSecret) {
-                    setSecret(updated.endpointSecret);
+                updateProject({
+                  projectId,
+                  input: { regenerateSecret: true },
+                }).then(result => {
+                  if (result?.data?.endpointSecret) {
+                    setSecret(result.data.endpointSecret)
                   }
-                } catch (error) {
-                  console.error("Failed to regenerate secret", error);
-                }
+                })
               }}
-              disabled={updateProject.isPending}
+              disabled={isPending}
             >
               Regenerate secret
             </Button>
@@ -245,16 +249,16 @@ export function EditProjectDialog({
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={updateProject.isPending}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={updateProject.isPending}>
-              {updateProject.isPending ? "Saving..." : "Save Changes"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

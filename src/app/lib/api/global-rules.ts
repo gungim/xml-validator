@@ -1,51 +1,59 @@
 import type {
-  GetGlobalRulesResponse,
   CreateGlobalRuleInput,
   CreateGlobalRuleResponse,
+  GetGlobalRulesResponse,
   UpdateGlobalRuleInput,
   UpdateGlobalRuleResponse,
-} from "../types/global-rules";
+} from '../types/global-rules'
+import { ApiSuccessResponse } from './response'
 
 export async function getGlobalRules(
   workspaceId: string
-): Promise<GetGlobalRulesResponse> {
-  const res = await fetch(`/api/workspaces/${workspaceId}/global-rules`);
-  if (!res.ok) throw new Error("Failed to fetch global rules");
-  return res.json();
+): Promise<ApiSuccessResponse<GetGlobalRulesResponse>> {
+  const res = await fetch(`/api/workspaces/${workspaceId}/global-rules`)
+  if (!res.ok) throw new Error('Failed to fetch global rules')
+  const result = await res.json()
+  return result
 }
 
 export async function createGlobalRule(
   input: CreateGlobalRuleInput
-): Promise<CreateGlobalRuleResponse> {
+): Promise<ApiSuccessResponse<CreateGlobalRuleResponse>> {
   const res = await fetch(`/api/workspaces/${input.workspaceId}/global-rules`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(input),
-  });
-  if (!res.ok) throw new Error("Failed to create global rule");
-  return res.json();
+  })
+  if (!res.ok) throw new Error('Failed to create global rule')
+  const result = await res.json()
+  return result
 }
 
 export async function updateGlobalRule(
   id: number,
   input: UpdateGlobalRuleInput
-): Promise<UpdateGlobalRuleResponse> {
+): Promise<ApiSuccessResponse<UpdateGlobalRuleResponse>> {
   const res = await fetch(`/api/global-rules/${id}`, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(input),
-  });
-  if (!res.ok) throw new Error("Failed to update global rule");
-  return res.json();
+  })
+  if (!res.ok) throw new Error('Failed to update global rule')
+  const result = await res.json()
+  return result
 }
 
-export async function deleteGlobalRule(id: number): Promise<void> {
+export async function deleteGlobalRule(
+  id: number
+): Promise<ApiSuccessResponse<unknown>> {
   const res = await fetch(`/api/global-rules/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete global rule");
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error('Failed to delete global rule')
+  const result = await res.json()
+  return result
 }

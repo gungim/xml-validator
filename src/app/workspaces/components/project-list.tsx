@@ -17,13 +17,13 @@ export default function ProjectList({ workspace_id }: ProjectListProps) {
         <CreateProjectDialog workspaceId={workspace_id} />
       </div>
 
-      {projects?.length === 0 ? (
+      {projects?.data?.length === 0 ? (
         <div>
           <span>Empty</span>
         </div>
       ) : (
         <div className="space-y-2">
-          {projects?.map(item => (
+          {projects?.data?.map(item => (
             <div
               key={item.id}
               className="p-4 border rounded hover:bg-gray-50 space-y-1"

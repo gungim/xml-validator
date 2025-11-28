@@ -1,23 +1,29 @@
-import { prisma } from "@/src/app/lib/db";
-import { NextResponse } from "next/server";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from '@/src/app/lib/api/response'
+import { prisma } from '@/src/app/lib/db'
+import { NextRequest } from 'next/server'
 
-export type GetWorkspaceDetailResponse = Awaited<
-  ReturnType<typeof prisma.workspace.findUnique>
->;
 export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
+
     const workspace = await prisma.workspace.findUnique({
-      where: { id: "cmhc14k8l0000z43a9r93r1bs"},
-      include: { projects: true }, // lấy kèm projects
-    });
+      where: { id },
+      include: { projects: true },
+    })
 
-    if (!workspace)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!workspace) {
+      return createErrorResponse('Workspace not found', 404)
+    }
 
-    return NextResponse.json(workspace);
+    return createSuccessResponse(workspace)
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    console.error('Failed to fetch workspace:', err)
+    return createErrorResponse('Internal server error', 500)
   }
 }
