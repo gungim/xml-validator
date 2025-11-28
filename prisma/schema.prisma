@@ -30,6 +30,17 @@ model Project {
   workspaceId    String
   workspace      Workspace @relation(fields: [workspaceId], references: [id])
   rules          Rule[]
+  logs           ValidationLog[]
+}
+
+model ValidationLog {
+  id        String   @id @default(cuid())
+  ip        String?
+  status    String   // "SUCCESS" | "FAILURE"
+  error     String?  // Error message if failed
+  createdAt DateTime @default(now())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Rule {

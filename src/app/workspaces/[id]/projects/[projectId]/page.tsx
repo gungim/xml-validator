@@ -1,3 +1,4 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import NotFound from '../../../../components/not-found'
@@ -7,6 +8,7 @@ import { EditProjectDialog } from '../components/edit-project-dialog'
 import { ImportXMLDialog } from '../components/import-xml-dialog'
 import { RulesTable } from '../components/rules-table'
 import { TestValidationDialog } from '../components/test-validation-dialog'
+import { ValidationLogs } from '../components/validation-logs'
 
 export default async function ProjectDetailPage({
   params,
@@ -71,18 +73,32 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
-      {/* Rules Section */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Validation Rules</h2>
-          <div className="flex gap-2">
-            <ImportXMLDialog projectId={projectId} workspaceId={workspaceId} />
-            <AddRuleDialog projectId={projectId} workspaceId={workspaceId} />
-          </div>
-        </div>
+      {/* Tabs Section */}
+      <Tabs defaultValue="rules" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="rules">Rules</TabsTrigger>
+          <TabsTrigger value="logs">Validation Logs</TabsTrigger>
+        </TabsList>
 
-        <RulesTable projectId={projectId} workspaceId={project.workspaceId} />
-      </div>
+        <TabsContent value="rules" className="space-y-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Validation Rules</h2>
+            <div className="flex gap-2">
+              <ImportXMLDialog
+                projectId={projectId}
+                workspaceId={workspaceId}
+              />
+              <AddRuleDialog projectId={projectId} workspaceId={workspaceId} />
+            </div>
+          </div>
+
+          <RulesTable projectId={projectId} workspaceId={project.workspaceId} />
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <ValidationLogs projectId={projectId} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

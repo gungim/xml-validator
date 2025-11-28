@@ -47,7 +47,6 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
   const [open, setOpen] = useState(false)
   const { data: rule, isLoading } = useRule(ruleId)
   const { mutateAsync: updateRule, isPending, error } = useUpdateRule()
-  console.log(rule)
   const dataTypes = ['string', 'number', 'boolean', 'object', 'array']
 
   // Condition state
