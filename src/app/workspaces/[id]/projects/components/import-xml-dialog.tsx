@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { useBulkCreateRules, useRules } from '@/src/app/lib/hooks/rules'
+import { usePermissions } from '@/src/app/lib/hooks/users'
 import { ParsedRule, parseXMLToRules } from '@/src/app/lib/utils/xml-parser'
 import { FileCode2 } from 'lucide-react'
 import { useState } from 'react'
@@ -49,6 +50,7 @@ export function ImportXMLDialog({
   projectId,
   workspaceId,
 }: ImportXMLDialogProps) {
+  const { canEdit } = usePermissions(workspaceId)
   const [open, setOpen] = useState(false)
   const [xmlInput, setXmlInput] = useState('')
   const [parsedRules, setParsedRules] = useState<ParsedRule[]>([])
@@ -293,10 +295,12 @@ export function ImportXMLDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <FileCode2 className="mr-2 h-4 w-4" />
-          Import from XML
-        </Button>
+        {canEdit && (
+          <Button variant="outline">
+            <FileCode2 className="mr-2 h-4 w-4" />
+            Import from XML
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-[90vw]! max-h-[90vh] overflow-y-auto">
         <DialogHeader>
