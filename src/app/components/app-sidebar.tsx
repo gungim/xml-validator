@@ -141,7 +141,7 @@ export function AppSidebar() {
           className="w-full"
         >
           <LogOut className="h-5 w-5" />
-          {isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
+          {isLoggingOut ? 'Logging out...' : 'Logout'}
         </Button>
       </div>
     </div>

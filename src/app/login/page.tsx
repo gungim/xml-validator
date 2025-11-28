@@ -52,10 +52,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg dark:bg-zinc-900">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Đăng nhập
+            Login
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Vui lòng đăng nhập để tiếp tục
+            Please login to continue
           </p>
         </div>
 
@@ -79,6 +79,7 @@ export default function LoginPage() {
                       autoComplete="email"
                       value={field.state.value}
                       onChange={e => field.handleChange(e.target.value)}
+                      placeholder="Enter your email"
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-red-500">
@@ -94,7 +95,7 @@ export default function LoginPage() {
               <form.Field name="password">
                 {field => (
                   <div className="space-y-2">
-                    <Label htmlFor={field.name}>Mật khẩu</Label>
+                    <Label htmlFor={field.name}>Password</Label>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -102,6 +103,7 @@ export default function LoginPage() {
                       autoComplete="current-password"
                       value={field.state.value}
                       onChange={e => field.handleChange(e.target.value)}
+                      placeholder="Enter your password"
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-red-500">
@@ -119,7 +121,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-zinc-50"
           >
-            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>
