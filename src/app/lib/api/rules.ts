@@ -1,8 +1,10 @@
+import { BulkCreateRequest } from '../../api/rules/bulk-create/route'
 import {
   CreateRuleInput,
   CreateRuleResponse,
   GetRulesResponse,
   RuleWithChildren,
+  UpdateRuleInput,
 } from '../types/rules'
 import { ApiSuccessResponse } from './response'
 
@@ -52,15 +54,7 @@ export async function deleteRule(
 
 export async function updateRule(
   ruleId: number,
-  data: {
-    name?: string
-    path?: string
-    dataType?: string
-    required?: boolean
-    description?: string | null
-    condition?: any
-    globalRuleId?: number | null
-  }
+  data: UpdateRuleInput
 ): Promise<ApiSuccessResponse<any>> {
   const res = await fetch(`/api/rules/${ruleId}`, {
     method: 'PATCH',
@@ -72,4 +66,14 @@ export async function updateRule(
   if (!res.ok) throw new Error('Failed to update rule')
   const result = await res.json()
   return result
+}
+
+export async function createBulkRules(data: BulkCreateRequest) {
+  const res = await fetch('/api/rules/bulk-create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to bulk create rules')
+  return res.json()
 }

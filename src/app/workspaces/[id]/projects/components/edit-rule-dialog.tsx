@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loading } from '@/src/app/components/loading'
+import { DataType } from '@prisma/client'
 import { useForm } from '@tanstack/react-form'
 import { Edit } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -65,7 +66,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
     defaultValues: {
       name: '',
       path: '',
-      dataType: 'string',
+      dataType: 'string' as DataType,
       required: false,
       description: '',
     },
@@ -131,7 +132,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
           path: value.path,
           dataType: value.dataType,
           required: value.required,
-          description: value.description || null,
+          description: value.description,
           condition,
         },
       }).then(() => {
@@ -309,7 +310,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                   <Select
                     value={field.state.value}
                     onValueChange={value => {
-                      field.handleChange(value)
+                      field.handleChange(value as DataType)
                       // Reset conditions when dataType changes
                       setStringCondition({ allowEmpty: true })
                       setNumberCondition({})

@@ -5,7 +5,7 @@ import {
 } from '../../../lib/api/response'
 import { prisma } from '../../../lib/db'
 
-interface BulkCreateRuleInput {
+export interface BulkCreateRuleInput {
   name: string
   path: string
   dataType: string
@@ -15,7 +15,7 @@ interface BulkCreateRuleInput {
   parentPath?: string
 }
 
-interface BulkCreateRequest {
+export interface BulkCreateRequest {
   projectId: string
   rules: BulkCreateRuleInput[]
   parentId?: number

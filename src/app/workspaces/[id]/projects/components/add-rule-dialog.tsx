@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { usePermissions } from '@/src/app/lib/hooks/users'
+import { DataType } from '@prisma/client'
 import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -80,7 +81,7 @@ export function AddRuleDialog({
     defaultValues: {
       name: '',
       path: '',
-      dataType: 'string',
+      dataType: 'string' as DataType,
       required: false,
     },
     onSubmit: async ({ value }) => {
@@ -163,7 +164,7 @@ export function AddRuleDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {canEdit && (
-          <>
+          <div>
             {isChildRule ? (
               <Button variant="ghost" size="sm">
                 {buttonLabel}
@@ -171,7 +172,7 @@ export function AddRuleDialog({
             ) : (
               <Button>{buttonLabel}</Button>
             )}
-          </>
+          </div>
         )}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -273,7 +274,7 @@ export function AddRuleDialog({
                     const rule = globalRules?.data.find(r => r.id === id)
                     if (rule) {
                       // Auto-populate and lock fields
-                      form.setFieldValue('dataType', rule.dataType)
+                      form.setFieldValue('dataType', rule.dataType as DataType)
 
                       const condition = rule.condition as any
                       if (rule.dataType === 'string') {
@@ -335,7 +336,7 @@ export function AddRuleDialog({
                 <Select
                   value={field.state.value}
                   onValueChange={value => {
-                    field.handleChange(value)
+                    field.handleChange(value as DataType)
                     // Reset conditions when dataType changes
                     setStringCondition({ allowEmpty: true })
                     setNumberCondition({})

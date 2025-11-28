@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { BulkCreateRequest } from '../../api/rules/bulk-create/route'
 import {
+  createBulkRules,
   createRule,
   deleteRule,
   getRule,
   getRules,
   updateRule,
 } from '../api/rules'
-import { CreateRuleInput } from '../types/rules'
+import { CreateRuleInput, UpdateRuleInput } from '../types/rules'
 
 export function useRules(projectId: string) {
   return useQuery({
@@ -55,21 +57,8 @@ export function useUpdateRule() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: number
-      data: {
-        name?: string
-        path?: string
-        dataType?: string
-        required?: boolean
-        description?: string | null
-        condition?: any
-        globalRuleId?: number | null
-      }
-    }) => updateRule(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdateRuleInput }) =>
+      updateRule(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['rules'],
@@ -85,30 +74,8 @@ export function useBulkCreateRules() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({
-      projectId,
-      rules,
-      parentId,
-    }: {
-      projectId: string
-      rules: Array<{
-        name: string
-        path: string
-        dataType: string
-        required: boolean
-        description?: string
-        condition: any
-        parentPath?: string
-      }>
-      parentId?: number
-    }) => {
-      const res = await fetch('/api/rules/bulk-create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, rules, parentId }),
-      })
-      if (!res.ok) throw new Error('Failed to bulk create rules')
-      return res.json()
+    mutationFn: async (data: BulkCreateRequest) => {
+      return createBulkRules(data)
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
