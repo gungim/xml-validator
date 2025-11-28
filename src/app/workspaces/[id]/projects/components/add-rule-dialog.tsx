@@ -27,6 +27,8 @@ import type {
   NumberCondition,
   StringCondition,
 } from '../../../../lib/types/rules'
+import { NumberConditionInput } from '../../../components/rule-form/number-condition-input'
+import { StringConditionInput } from '../../../components/rule-form/string-condition-input'
 
 const ruleSchema = z.object({
   name: z.string().min(1, 'Rule name is required'),
@@ -49,7 +51,7 @@ export function AddRuleDialog({
   workspaceId,
 }: AddRuleDialogProps) {
   const [open, setOpen] = useState(false)
-  const createRule = useCreateRule()
+  const { mutateAsync: createRule, isPending, error } = useCreateRule()
   const { data: globalRules } = useGlobalRules(workspaceId)
 
   const isChildRule = parentId !== undefined
@@ -81,55 +83,54 @@ export function AddRuleDialog({
     },
     onSubmit: async ({ value }) => {
       setConditionError(null)
-      try {
-        // Build condition based on dataType
-        let condition = {}
-        if (value.dataType === 'string') {
-          // Validate string conditions
-          if (
-            stringCondition.minLength !== undefined &&
-            stringCondition.maxLength !== undefined
-          ) {
-            if (stringCondition.minLength > stringCondition.maxLength) {
-              setConditionError('Min length cannot be greater than max length')
-              return
-            }
-          }
-
-          condition = {
-            maxLength: stringCondition.maxLength,
-            minLength: stringCondition.minLength,
-            allowEmpty: stringCondition.allowEmpty ?? true,
-            pattern: stringCondition.pattern,
-          }
-        } else if (value.dataType === 'number') {
-          // Validate number conditions
-          if (
-            numberCondition.min !== undefined &&
-            numberCondition.max !== undefined
-          ) {
-            if (numberCondition.min > numberCondition.max) {
-              setConditionError('Min value cannot be greater than max value')
-              return
-            }
-          }
-
-          condition = {
-            min: numberCondition.min,
-            max: numberCondition.max,
+      // Build condition based on dataType
+      let condition = {}
+      if (value.dataType === 'string') {
+        // Validate string conditions
+        if (
+          stringCondition.minLength !== undefined &&
+          stringCondition.maxLength !== undefined
+        ) {
+          if (stringCondition.minLength > stringCondition.maxLength) {
+            setConditionError('Min length cannot be greater than max length')
+            return
           }
         }
 
-        await createRule.mutateAsync({
-          name: value.name,
-          path: value.path,
-          dataType: value.dataType,
-          required: value.required,
-          condition,
-          projectId,
-          parentId,
-          globalRuleId: selectedGlobalRuleId || undefined,
-        })
+        condition = {
+          maxLength: stringCondition.maxLength,
+          minLength: stringCondition.minLength,
+          allowEmpty: stringCondition.allowEmpty ?? true,
+          pattern: stringCondition.pattern,
+        }
+      } else if (value.dataType === 'number') {
+        // Validate number conditions
+        if (
+          numberCondition.min !== undefined &&
+          numberCondition.max !== undefined
+        ) {
+          if (numberCondition.min > numberCondition.max) {
+            setConditionError('Min value cannot be greater than max value')
+            return
+          }
+        }
+
+        condition = {
+          min: numberCondition.min,
+          max: numberCondition.max,
+        }
+      }
+
+      createRule({
+        name: value.name,
+        path: value.path,
+        dataType: value.dataType,
+        required: value.required,
+        condition,
+        projectId,
+        parentId,
+        globalRuleId: selectedGlobalRuleId || undefined,
+      }).then(() => {
         setOpen(false)
         form.reset()
         // Reset conditions and global rule
@@ -137,9 +138,7 @@ export function AddRuleDialog({
         setNumberCondition({})
         setSelectedGlobalRuleId(null)
         setConditionError(null)
-      } catch (error) {
-        console.error('Failed to create rule:', error)
-      }
+      })
     },
   })
 
@@ -210,7 +209,7 @@ export function AddRuleDialog({
                   onBlur={field.handleBlur}
                   onChange={e => field.handleChange(e.target.value)}
                   placeholder="Enter rule name"
-                  disabled={createRule.isPending}
+                  disabled={isPending}
                 />
                 {field.state.meta.errors.length > 0 && (
                   <p className="text-sm text-red-500">
@@ -243,7 +242,7 @@ export function AddRuleDialog({
                   onBlur={field.handleBlur}
                   onChange={e => field.handleChange(e.target.value)}
                   placeholder="e.g., user.email"
-                  disabled={createRule.isPending}
+                  disabled={isPending}
                 />
                 {field.state.meta.errors.length > 0 && (
                   <p className="text-sm text-red-500">
@@ -290,7 +289,7 @@ export function AddRuleDialog({
                     // Let's keep current but allow editing
                   }
                 }}
-                disabled={createRule.isPending}
+                disabled={isPending}
               >
                 <SelectTrigger id="globalRule" className="w-full">
                   <SelectValue placeholder="None (Custom Rule)" />
@@ -335,9 +334,7 @@ export function AddRuleDialog({
                     setStringCondition({ allowEmpty: true })
                     setNumberCondition({})
                   }}
-                  disabled={
-                    createRule.isPending || selectedGlobalRuleId !== null
-                  }
+                  disabled={isPending || selectedGlobalRuleId !== null}
                 >
                   <SelectTrigger id={field.name} className="w-full">
                     <SelectValue />
@@ -368,7 +365,7 @@ export function AddRuleDialog({
                   name={field.name}
                   checked={field.state.value}
                   onChange={e => field.handleChange(e.target.checked)}
-                  disabled={createRule.isPending}
+                  disabled={isPending}
                   className="h-4 w-4"
                 />
                 <Label htmlFor={field.name} className="cursor-pointer">
@@ -377,155 +374,29 @@ export function AddRuleDialog({
               </div>
             )}
           </form.Field>
-
           {/* String Conditions */}
           {currentDataType === 'string' && (
-            <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
-              <h4 className="font-medium text-sm">String Validation</h4>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="minLength">Min Length</Label>
-                  <Input
-                    id="minLength"
-                    type="number"
-                    min="0"
-                    value={stringCondition.minLength ?? ''}
-                    onChange={e =>
-                      setStringCondition({
-                        ...stringCondition,
-                        minLength: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="e.g., 5"
-                    disabled={
-                      createRule.isPending || selectedGlobalRuleId !== null
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="maxLength">Max Length</Label>
-                  <Input
-                    id="maxLength"
-                    type="number"
-                    min="0"
-                    value={stringCondition.maxLength ?? ''}
-                    onChange={e =>
-                      setStringCondition({
-                        ...stringCondition,
-                        maxLength: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="e.g., 255"
-                    disabled={
-                      createRule.isPending || selectedGlobalRuleId !== null
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pattern">Regex Pattern</Label>
-                <Input
-                  id="pattern"
-                  value={stringCondition.pattern ?? ''}
-                  onChange={e =>
-                    setStringCondition({
-                      ...stringCondition,
-                      pattern: e.target.value || undefined,
-                    })
-                  }
-                  placeholder="e.g., ^[a-zA-Z0-9]+$"
-                  disabled={
-                    createRule.isPending || selectedGlobalRuleId !== null
-                  }
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="allowEmpty"
-                  checked={stringCondition.allowEmpty ?? true}
-                  onChange={e =>
-                    setStringCondition({
-                      ...stringCondition,
-                      allowEmpty: e.target.checked,
-                    })
-                  }
-                  disabled={
-                    createRule.isPending || selectedGlobalRuleId !== null
-                  }
-                  className="h-4 w-4"
-                />
-                <Label htmlFor="allowEmpty" className="cursor-pointer">
-                  Allow empty string
-                </Label>
-              </div>
-            </div>
+            <StringConditionInput
+              condition={stringCondition}
+              onChange={setStringCondition}
+              disabled={isPending}
+            />
           )}
 
           {/* Number Conditions */}
           {currentDataType === 'number' && (
-            <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
-              <h4 className="font-medium text-sm">Number Validation</h4>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="min">Minimum Value</Label>
-                  <Input
-                    id="min"
-                    type="number"
-                    value={numberCondition.min ?? ''}
-                    onChange={e =>
-                      setNumberCondition({
-                        ...numberCondition,
-                        min: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="e.g., 0"
-                    disabled={
-                      createRule.isPending || selectedGlobalRuleId !== null
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="max">Maximum Value</Label>
-                  <Input
-                    id="max"
-                    type="number"
-                    value={numberCondition.max ?? ''}
-                    onChange={e =>
-                      setNumberCondition({
-                        ...numberCondition,
-                        max: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="e.g., 100"
-                    disabled={
-                      createRule.isPending || selectedGlobalRuleId !== null
-                    }
-                  />
-                </div>
-              </div>
-            </div>
+            <NumberConditionInput
+              condition={numberCondition}
+              onChange={setNumberCondition}
+              disabled={isPending}
+            />
           )}
 
           {conditionError && (
             <p className="text-sm text-red-500">{conditionError}</p>
           )}
 
-          {createRule.isError && (
+          {error && (
             <p className="text-sm text-red-500">
               Failed to create rule. Please try again.
             </p>
@@ -536,12 +407,12 @@ export function AddRuleDialog({
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={createRule.isPending}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createRule.isPending}>
-              {createRule.isPending ? 'Creating...' : 'Create Rule'}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Creating...' : 'Create Rule'}
             </Button>
           </div>
         </form>

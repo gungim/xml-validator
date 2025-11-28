@@ -16,6 +16,8 @@ import { useState } from 'react'
 import { z } from 'zod'
 import { useCreateGlobalRule } from '../../lib/hooks/global-rules'
 import type { NumberCondition, StringCondition } from '../../lib/types/rules'
+import { NumberConditionInput } from './rule-form/number-condition-input'
+import { StringConditionInput } from './rule-form/string-condition-input'
 
 const globalRuleSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -96,7 +98,7 @@ export function AddGlobalRuleDialog({
     },
   })
 
-  const currentDataType = form.state.values.dataType
+  const dataType = form.state.values.dataType
   const isChildRule = parentId !== undefined
 
   const buttonLabel = isChildRule ? (
@@ -230,136 +232,22 @@ export function AddGlobalRuleDialog({
           </form.Field>
 
           {/* String Conditions */}
-          {currentDataType === 'string' && (
-            <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
-              <h4 className="font-medium text-sm">String Validation</h4>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="minLength">Min Length</Label>
-                  <Input
-                    id="minLength"
-                    type="number"
-                    min="0"
-                    value={stringCondition.minLength ?? ''}
-                    onChange={e =>
-                      setStringCondition({
-                        ...stringCondition,
-                        minLength: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="e.g., 5"
-                    disabled={isPending}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="maxLength">Max Length</Label>
-                  <Input
-                    id="maxLength"
-                    type="number"
-                    min="0"
-                    value={stringCondition.maxLength ?? ''}
-                    onChange={e =>
-                      setStringCondition({
-                        ...stringCondition,
-                        maxLength: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="e.g., 255"
-                    disabled={isPending}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pattern">Regex Pattern</Label>
-                <Input
-                  id="pattern"
-                  value={stringCondition.pattern ?? ''}
-                  onChange={e =>
-                    setStringCondition({
-                      ...stringCondition,
-                      pattern: e.target.value || undefined,
-                    })
-                  }
-                  placeholder="e.g., ^[a-zA-Z0-9@.]+$"
-                  disabled={isPending}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="allowEmpty"
-                  checked={stringCondition.allowEmpty ?? true}
-                  onChange={e =>
-                    setStringCondition({
-                      ...stringCondition,
-                      allowEmpty: e.target.checked,
-                    })
-                  }
-                  disabled={isPending}
-                  className="h-4 w-4"
-                />
-                <Label htmlFor="allowEmpty" className="cursor-pointer">
-                  Allow empty string
-                </Label>
-              </div>
-            </div>
+          {dataType === 'string' && (
+            <StringConditionInput
+              condition={stringCondition}
+              onChange={setStringCondition}
+              disabled={isPending}
+            />
           )}
 
           {/* Number Conditions */}
-          {currentDataType === 'number' && (
-            <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
-              <h4 className="font-medium text-sm">Number Validation</h4>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="min">Min Value</Label>
-                  <Input
-                    id="min"
-                    type="number"
-                    value={numberCondition.min ?? ''}
-                    onChange={e =>
-                      setNumberCondition({
-                        ...numberCondition,
-                        min: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="e.g., 0"
-                    disabled={isPending}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="max">Max Value</Label>
-                  <Input
-                    id="max"
-                    type="number"
-                    value={numberCondition.max ?? ''}
-                    onChange={e =>
-                      setNumberCondition({
-                        ...numberCondition,
-                        max: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="e.g., 100"
-                    disabled={isPending}
-                  />
-                </div>
-              </div>
-            </div>
+          {dataType === 'number' && (
+            <NumberConditionInput
+              condition={numberCondition}
+              onChange={setNumberCondition}
+              disabled={isPending}
+            />
           )}
-
           {error && (
             <p className="text-sm text-red-500">
               Failed to create global rule. Please try again.
