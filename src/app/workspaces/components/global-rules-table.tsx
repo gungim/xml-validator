@@ -10,7 +10,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Trash2 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
 import { Loading } from '../../components/loading'
 import {
   useDeleteGlobalRule,
@@ -40,8 +39,7 @@ interface GlobalRule {
 export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
   const { data: globalRules, isLoading } = useGlobalRules(workspaceId)
   const deleteGlobalRule = useDeleteGlobalRule()
-  const { data: session } = useSession()
-  const { canEdit, canDelete } = usePermissions(workspaceId, session?.user?.id)
+  const { canEdit, canDelete } = usePermissions(workspaceId)
 
   const handleDelete = async (globalRule: GlobalRule) => {
     const childCount = globalRule.children?.length || 0

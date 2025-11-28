@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { usePermissions } from '@/src/app/lib/hooks/users'
 import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -43,6 +44,8 @@ export function EditProjectDialog({
   workspaceId,
   endpointSecret,
 }: EditProjectDialogProps) {
+  const { canEdit } = usePermissions(workspaceId)
+
   const [open, setOpen] = useState(false)
   const [secret, setSecret] = useState(endpointSecret)
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
@@ -82,7 +85,7 @@ export function EditProjectDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Edit Project</Button>
+        {canEdit && <Button variant="outline">Edit Project</Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

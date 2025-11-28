@@ -1,26 +1,41 @@
-"use client";
+'use client'
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Role } from "@prisma/client";
-import { Edit, Trash2, Shield } from "lucide-react";
-import { UserWithPermissions } from "@/src/app/lib/types/users";
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { usePermissionsContext } from '@/src/app/lib/contexts/permissions-context'
+import { UserWithPermissions } from '@/src/app/lib/types/users'
+import { Role } from '@prisma/client'
+import { Edit, Shield, Trash2 } from 'lucide-react'
 
 interface UserListProps {
-  users: UserWithPermissions[];
-  onEdit: (user: UserWithPermissions) => void;
-  onDelete: (user: UserWithPermissions) => void;
-  onManagePermissions: (user: UserWithPermissions) => void;
+  users: UserWithPermissions[]
+  onEdit: (user: UserWithPermissions) => void
+  onDelete: (user: UserWithPermissions) => void
+  onManagePermissions: (user: UserWithPermissions) => void
 }
 
-export function UserList({ users, onEdit, onDelete, onManagePermissions }: UserListProps) {
+export function UserList({
+  users,
+  onEdit,
+  onDelete,
+  onManagePermissions,
+}: UserListProps) {
+  const { user: currentUser } = usePermissionsContext()
+  const isAdmin = currentUser?.role === 'ADMIN'
   if (users.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">No users found.</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -36,25 +51,35 @@ export function UserList({ users, onEdit, onDelete, onManagePermissions }: UserL
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
+          {users.map(user => (
             <TableRow key={user.id}>
               <TableCell className="font-medium">{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
-                <Badge variant={user.role === Role.ADMIN ? "default" : "secondary"}>
+                <Badge
+                  variant={user.role === Role.ADMIN ? 'default' : 'secondary'}
+                >
                   {user.role}
                 </Badge>
               </TableCell>
               <TableCell>
                 {user.role === Role.ADMIN ? (
-                  <span className="text-sm text-muted-foreground">Full Access</span>
+                  <span className="text-sm text-muted-foreground">
+                    Full Access
+                  </span>
                 ) : (
                   <div className="flex flex-wrap gap-1">
                     {user.permissions.length === 0 ? (
-                      <span className="text-sm text-muted-foreground">None</span>
+                      <span className="text-sm text-muted-foreground">
+                        None
+                      </span>
                     ) : (
-                      user.permissions.slice(0, 2).map((permission) => (
-                        <Badge key={permission.id} variant="outline" className="text-xs">
+                      user.permissions.slice(0, 2).map(permission => (
+                        <Badge
+                          key={permission.id}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {permission.workspace?.name}: {permission.permission}
                         </Badge>
                       ))
@@ -69,7 +94,7 @@ export function UserList({ users, onEdit, onDelete, onManagePermissions }: UserL
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  {user.role === Role.USER && (
+                  {user.role === Role.USER && isAdmin && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -79,22 +104,26 @@ export function UserList({ users, onEdit, onDelete, onManagePermissions }: UserL
                       <Shield className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(user)}
-                    title="Edit User"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(user)}
-                    title="Delete User"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {isAdmin && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(user)}
+                        title="Edit User"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete(user)}
+                        title="Delete User"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </TableCell>
             </TableRow>
@@ -102,5 +131,5 @@ export function UserList({ users, onEdit, onDelete, onManagePermissions }: UserL
         </TableBody>
       </Table>
     </div>
-  );
+  )
 }

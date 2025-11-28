@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loading } from '@/src/app/components/loading'
+import { usePermissionsContext } from '@/src/app/lib/contexts/permissions-context'
 import { useUsers } from '@/src/app/lib/hooks/users'
 import { UserWithPermissions } from '@/src/app/lib/types/users'
 import { Role } from '@prisma/client'
@@ -29,7 +30,8 @@ export default function UsersPage() {
     null
   )
   const [roleFilter, setRoleFilter] = useState<string>('all')
-
+  const { user: currentUser } = usePermissionsContext()
+  const isAdmin = currentUser?.role === 'ADMIN'
   const { data, isLoading, error } = useUsers()
 
   const handleEdit = (user: UserWithPermissions) => {
@@ -56,10 +58,12 @@ export default function UsersPage() {
             Manage users, roles, and permissions
           </p>
         </div>
-        <Button onClick={() => setAddDialogOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setAddDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add User
+          </Button>
+        )}
       </div>
 
       <div className="mb-4">

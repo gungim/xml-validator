@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/table'
 import { Loading } from '@/src/app/components/loading'
 import { Trash2 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
 import {
   useDeleteRule,
   useRules,
@@ -46,8 +45,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
   const { data: rules, isLoading } = useRules(projectId)
   const deleteRule = useDeleteRule()
   const updateRule = useUpdateRule()
-  const { data: session } = useSession()
-  const { canEdit, canDelete } = usePermissions(workspaceId, session?.user?.id)
+  const { canEdit, canDelete } = usePermissions(workspaceId)
 
   const handleDelete = async (rule: Rule) => {
     const childCount = rule.children?.length || 0

@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { usePermissions } from '@/src/app/lib/hooks/users'
 import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -53,6 +54,7 @@ export function AddRuleDialog({
   const [open, setOpen] = useState(false)
   const { mutateAsync: createRule, isPending, error } = useCreateRule()
   const { data: globalRules } = useGlobalRules(workspaceId)
+  const { canEdit } = usePermissions(workspaceId)
 
   const isChildRule = parentId !== undefined
   const dataTypes = ['string', 'number', 'boolean', 'object', 'array']
@@ -160,12 +162,16 @@ export function AddRuleDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {isChildRule ? (
-          <Button variant="ghost" size="sm">
-            {buttonLabel}
-          </Button>
-        ) : (
-          <Button>{buttonLabel}</Button>
+        {canEdit && (
+          <>
+            {isChildRule ? (
+              <Button variant="ghost" size="sm">
+                {buttonLabel}
+              </Button>
+            ) : (
+              <Button>{buttonLabel}</Button>
+            )}
+          </>
         )}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">

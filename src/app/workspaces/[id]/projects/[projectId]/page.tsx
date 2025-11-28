@@ -10,9 +10,9 @@ import { TestValidationDialog } from '../components/test-validation-dialog'
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: Promise<{ projectId: string }>
+  params: Promise<{ projectId: string; id: string }>
 }) {
-  const { projectId } = await params
+  const { projectId, id: workspaceId } = await params
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },

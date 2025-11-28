@@ -1,4 +1,5 @@
 import { Role } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../lib/db'
 import { createUserSchema } from '../../lib/types/users'
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     // Validate request body
     const validatedData = createUserSchema.parse(body)
+    validatedData.password = await bcrypt.hash(validatedData.password, 10)
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({

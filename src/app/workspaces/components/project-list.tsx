@@ -1,6 +1,5 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Loading } from '../../components/loading'
 import { useProjects } from '../../lib/hooks/projects'
@@ -12,8 +11,7 @@ interface ProjectListProps {
 }
 export default function ProjectList({ workspace_id }: ProjectListProps) {
   const { data: projects, isLoading } = useProjects(workspace_id)
-  const { data: session } = useSession()
-  const { canEdit } = usePermissions(workspace_id, session?.user?.id)
+  const { canEdit } = usePermissions(workspace_id)
 
   if (isLoading) {
     return <Loading />

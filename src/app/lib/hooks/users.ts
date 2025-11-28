@@ -8,6 +8,7 @@ import {
   removePermission,
   updateUser,
 } from '../api/users'
+import { usePermissionsContext } from '../contexts/permissions-context'
 import {
   AssignPermissionRequest,
   CreateUserRequest,
@@ -31,9 +32,8 @@ export function useCurrentUser(userId?: string) {
   })
 }
 
-export function usePermissions(workspaceId: string, userId?: string) {
-  const { data: userData, isLoading } = useCurrentUser(userId)
-  const user = userData?.data
+export function usePermissions(workspaceId: string) {
+  const { user, isLoading } = usePermissionsContext()
 
   if (isLoading) {
     return {

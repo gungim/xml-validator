@@ -7,7 +7,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { MenuIcon } from 'lucide-react'
-import { useSession } from 'next-auth/react'
 import { usePermissions } from '../../lib/hooks/users'
 import { DeleteWorkspaceDialog } from './delete-workspace-dialog'
 import { EditWorkspaceDialog } from './edit-workspace-dialog'
@@ -20,8 +19,7 @@ interface WorkspaceActionsMenuProps {
 }
 
 export function WorkspaceActionsMenu({ workspace }: WorkspaceActionsMenuProps) {
-  const { data: session } = useSession()
-  const { canEdit, canDelete } = usePermissions(workspace.id, session?.user?.id)
+  const { canEdit, canDelete } = usePermissions(workspace.id)
 
   // If user has no edit or delete permissions, don't render the menu
   if (!canEdit && !canDelete) {
