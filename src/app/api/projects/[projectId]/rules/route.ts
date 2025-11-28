@@ -13,7 +13,6 @@ const VALID_DATA_TYPES = [
   'object',
   'array',
 ] as const
-type DataTypeValue = (typeof VALID_DATA_TYPES)[number]
 
 export async function GET(
   request: NextRequest,

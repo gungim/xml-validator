@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from '@/src/app/lib/api/response'
 import { prisma } from '@/src/app/lib/db'
 import { runProjectValidation } from '../runner'
 
@@ -30,10 +34,7 @@ export async function POST(
     const { slug } = await params
     const apiKey = request.headers.get(API_KEY_HEADER)
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Missing API key' },
-        { status: 401, headers: corsHeaders }
-      )
+      return createErrorResponse('Missing API key', 401)
     }
 
     const project = await prisma.project.findUnique({
@@ -42,26 +43,17 @@ export async function POST(
     })
 
     if (!project) {
-      return NextResponse.json(
-        { error: 'Endpoint not found' },
-        { status: 404, headers: corsHeaders }
-      )
+      return createErrorResponse('Endpoint not found', 404)
     }
 
     if (project.endpointSecret !== apiKey) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401, headers: corsHeaders }
-      )
+      return createErrorResponse('Unauthorized', 401)
     }
 
     const xml = await request.text()
 
     if (xml.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'XML payload is required' },
-        { status: 400, headers: corsHeaders }
-      )
+      return createErrorResponse('XML payload is required', 400)
     }
 
     // Get IP address
@@ -82,7 +74,7 @@ export async function POST(
         },
       })
 
-      return NextResponse.json(result, { headers: corsHeaders })
+      return createSuccessResponse(result)
     } catch (err) {
       console.error(err)
 
@@ -96,16 +88,10 @@ export async function POST(
         },
       })
 
-      return NextResponse.json(
-        { error: 'Validation failed' },
-        { status: 500, headers: corsHeaders }
-      )
+      return createErrorResponse('Validation failed', 500)
     }
   } catch (err) {
     console.error(err)
-    return NextResponse.json(
-      { error: 'Validation failed' },
-      { status: 500, headers: corsHeaders }
-    )
+    return createErrorResponse('Validation failed', 500)
   }
 }

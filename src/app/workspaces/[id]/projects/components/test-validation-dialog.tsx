@@ -80,7 +80,7 @@ export function TestValidationDialog({
           {error && (
             <div className="rounded-md border border-red-200 bg-red-50 p-3">
               <div className="flex items-start gap-2">
-                <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <XCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                 <div className="text-sm text-red-800">{error}</div>
               </div>
             </div>
@@ -97,7 +97,7 @@ export function TestValidationDialog({
               <div className="flex items-start gap-2 mb-3">
                 {validationResult?.data?.isValid ? (
                   <>
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
                     <div>
                       <div className="font-semibold text-green-900">
                         Validation Successful
@@ -109,7 +109,7 @@ export function TestValidationDialog({
                   </>
                 ) : (
                   <>
-                    <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <XCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                     <div className="flex-1">
                       <div className="font-semibold text-red-900">
                         Validation Failed

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -85,10 +85,7 @@ export async function POST(request: NextRequest) {
       return results
     })
 
-    return NextResponse.json(
-      createSuccessResponse(createdRules, createdRules.length),
-      { status: 201 }
-    )
+    return createSuccessResponse(createdRules, createdRules.length)
   } catch (error) {
     console.error('Error bulk creating rules:', error)
     return createErrorResponse('Failed to create rules', 500)

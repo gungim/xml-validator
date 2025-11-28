@@ -1,6 +1,10 @@
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from '@/src/app/lib/api/response'
 import { prisma } from '@/src/app/lib/db'
 import { UpdateGlobalRuleInput } from '@/src/app/lib/types/global-rules'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 
 const VALID_DATA_TYPES = [
   'string',
@@ -28,28 +32,23 @@ export async function PUT(
   })
 
   if (!existing) {
-    return NextResponse.json(
-      { error: 'Global rule not found' },
-      { status: 404 }
-    )
+    return createErrorResponse('Global rule not found', 404)
   }
 
   // Validate dataType if provided
   if (body.dataType && !VALID_DATA_TYPES.includes(body.dataType as any)) {
-    return NextResponse.json(
-      {
-        error: `Invalid data type. Must be one of: ${VALID_DATA_TYPES.join(', ')}`,
-      },
-      { status: 400 }
+    return createErrorResponse(
+      `Invalid data type. Must be one of: ${VALID_DATA_TYPES.join(', ')}`,
+      400
     )
   }
 
   // Validate dataType changes - don't allow if has children
   if (body.dataType && body.dataType !== existing.dataType) {
     if (existing.children && existing.children.length > 0) {
-      return NextResponse.json(
-        { error: 'Cannot change data type of a global rule with children' },
-        { status: 400 }
+      return createErrorResponse(
+        'Cannot change data type of a global rule with children',
+        400
       )
     }
   }
@@ -65,12 +64,9 @@ export async function PUT(
     })
 
     if (duplicate) {
-      return NextResponse.json(
-        {
-          error:
-            'A global rule with this name already exists in this workspace',
-        },
-        { status: 400 }
+      return createErrorResponse(
+        'A global rule with this name already exists in this workspace',
+        400
       )
     }
   }
@@ -109,7 +105,7 @@ export async function PUT(
     })
   }
 
-  return NextResponse.json({ data: updated })
+  return createSuccessResponse(updated)
 }
 
 export async function DELETE(
@@ -125,10 +121,7 @@ export async function DELETE(
   })
 
   if (!existing) {
-    return NextResponse.json(
-      { error: 'Global rule not found' },
-      { status: 404 }
-    )
+    return createErrorResponse('Global rule not found', 404)
   }
 
   // Delete (cascade SetNull will handle appliedRules)
@@ -136,5 +129,5 @@ export async function DELETE(
     where: { id: globalRuleId },
   })
 
-  return NextResponse.json({ data: null })
+  return createSuccessResponse(null)
 }

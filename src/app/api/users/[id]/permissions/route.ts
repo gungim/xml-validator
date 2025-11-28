@@ -1,5 +1,9 @@
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from '@/src/app/lib/api/response'
 import { Role } from '@prisma/client'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '../../../../lib/db'
 import { assignPermissionSchema } from '../../../../lib/types/users'
 
@@ -28,13 +32,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     })
 
-    return NextResponse.json({ data: permissions })
+    return createSuccessResponse(permissions)
   } catch (error) {
     console.error('Error fetching permissions:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch permissions' },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to fetch permissions', 500)
   }
 }
 
@@ -52,13 +53,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return createErrorResponse('User not found', 404)
     }
 
     if (user.role === Role.ADMIN) {
-      return NextResponse.json(
-        { error: 'Cannot assign permissions to admin users' },
-        { status: 400 }
+      return createErrorResponse(
+        'Cannot assign permissions to admin users',
+        400
       )
     }
 
@@ -68,10 +69,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     })
 
     if (!workspace) {
-      return NextResponse.json(
-        { error: 'Workspace not found' },
-        { status: 404 }
-      )
+      return createErrorResponse('Workspace not found', 404)
     }
 
     // Create or update permission
@@ -100,21 +98,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     })
 
-    return NextResponse.json({ data: permission }, { status: 201 })
+    return createSuccessResponse(permission)
   } catch (error) {
     console.error('Error assigning permission:', error)
 
     if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error },
-        { status: 400 }
-      )
+      return createErrorResponse('Invalid request data', 400)
     }
 
-    return NextResponse.json(
-      { error: 'Failed to assign permission' },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to assign permission', 500)
   }
 }
 
@@ -124,10 +116,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const workspaceId = request.nextUrl.searchParams.get('workspaceId')
 
     if (!workspaceId) {
-      return NextResponse.json(
-        { error: 'Missing workspaceId' },
-        { status: 400 }
-      )
+      return createErrorResponse('Missing workspaceId', 400)
     }
 
     await prisma.userPermission.delete({
@@ -139,12 +128,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       },
     })
 
-    return NextResponse.json({ data: null }, { status: 204 })
+    return createSuccessResponse(null)
   } catch (error) {
     console.error('Error removing permission:', error)
-    return NextResponse.json(
-      { error: 'Failed to remove permission' },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to remove permission', 500)
   }
 }

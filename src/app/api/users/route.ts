@@ -1,12 +1,21 @@
 import { Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from '../../lib/api/response'
 import { prisma } from '../../lib/db'
 import { createUserSchema } from '../../lib/types/users'
 
 export async function GET(request: NextRequest) {
   try {
     const roleFilter = request.nextUrl.searchParams.get('role')
+    const limit = Number(request.nextUrl.searchParams.get('limit')) || 50
+    const offset = Number(request.nextUrl.searchParams.get('offset')) || 0
+    const total = await prisma.user.count({
+      where: roleFilter ? { role: roleFilter as Role } : undefined,
+    })
 
     const users = await prisma.user.findMany({
       where: roleFilter ? { role: roleFilter as Role } : undefined,
@@ -25,15 +34,14 @@ export async function GET(request: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
+      take: limit,
+      skip: offset,
     })
 
-    return NextResponse.json({ data: users, total: await prisma.user.count() })
+    return createSuccessResponse(users, total)
   } catch (error) {
     console.error('Error fetching users:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to fetch users', 500)
   }
 }
 
@@ -51,10 +59,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'Email already exists' },
-        { status: 400 }
-      )
+      return createErrorResponse('Email already exists', 400)
     }
 
     // Create user
@@ -74,20 +79,14 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ data: user }, { status: 201 })
+    return createSuccessResponse(user)
   } catch (error) {
     console.error('Error creating user:', error)
 
     if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error },
-        { status: 400 }
-      )
+      return createErrorResponse('Invalid request data', 400)
     }
 
-    return NextResponse.json(
-      { error: 'Failed to create user' },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to create user', 500)
   }
 }

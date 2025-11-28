@@ -1,4 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from '@/src/app/lib/api/response'
+import { NextRequest } from 'next/server'
 import { prisma } from '../../../lib/db'
 import { updateUserSchema } from '../../../lib/types/users'
 
@@ -29,13 +33,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return createErrorResponse('User not found', 404)
     }
 
-    return NextResponse.json({ data: user })
+    return createSuccessResponse(user)
   } catch (error) {
     console.error('Error fetching user:', error)
-    return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 })
+    return createErrorResponse('Failed to fetch user', 500)
   }
 }
 
@@ -54,10 +58,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       })
 
       if (existingUser && existingUser.id !== id) {
-        return NextResponse.json(
-          { error: 'Email already exists' },
-          { status: 400 }
-        )
+        return createErrorResponse('Email already exists', 400)
       }
     }
 
@@ -79,21 +80,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       },
     })
 
-    return NextResponse.json({ data: user })
+    return createSuccessResponse(user)
   } catch (error) {
     console.error('Error updating user:', error)
 
     if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error },
-        { status: 400 }
-      )
+      return createErrorResponse('Invalid request data', 400)
     }
 
-    return NextResponse.json(
-      { error: 'Failed to update user' },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to update user', 500)
   }
 }
 
@@ -105,12 +100,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       where: { id },
     })
 
-    return NextResponse.json({ data: null }, { status: 204 })
+    return createSuccessResponse(null)
   } catch (error) {
     console.error('Error deleting user:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete user' },
-      { status: 500 }
-    )
+    return createErrorResponse('Failed to delete user', 500)
   }
 }

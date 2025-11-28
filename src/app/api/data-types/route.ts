@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
+import { createSuccessResponse } from '@/src/app/lib/api/response'
 
 const DATA_TYPES = ['string', 'number', 'boolean', 'object', 'array']
 
 export async function GET() {
-  return NextResponse.json({ data: DATA_TYPES })
+  return createSuccessResponse(DATA_TYPES)
 }
