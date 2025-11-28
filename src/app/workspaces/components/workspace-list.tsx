@@ -1,8 +1,9 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { Workspace } from '@prisma/client'
 import Link from 'next/link'
+import { DeleteWorkspaceDialog } from './delete-workspace-dialog'
+import { EditWorkspaceDialog } from './edit-workspace-dialog'
 
 interface WorkspaceListProps {
   workspaces: Workspace[]
@@ -24,16 +25,11 @@ export default function WorkspaceList({
             <span>{ws.name}</span>
           </Link>
           <div className="space-x-2">
-            <Button
-            // onClick={() => onEdit(ws)}
-            >
-              Edit
-            </Button>
-            <Button
-            // onClick={() => onDelete(ws.id)}
-            >
-              Delete
-            </Button>
+            <EditWorkspaceDialog workspace={ws} />
+            <DeleteWorkspaceDialog
+              workspaceId={ws.id}
+              workspaceName={ws.name}
+            />
           </div>
         </li>
       ))}

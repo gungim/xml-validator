@@ -1,21 +1,22 @@
-import NotFound from "../../../components/not-found";
-import { prisma } from "../../../lib/db";
-import ProjectList from "../../components/project-list";
-import { GlobalRulesTable } from "../../components/global-rules-table";
+import NotFound from '../../../components/not-found'
+import { prisma } from '../../../lib/db'
+import { GlobalRulesTable } from '../../components/global-rules-table'
+import ProjectList from '../../components/project-list'
+import { WorkspaceActionsMenu } from '../../components/workspace-actions-menu'
 
 export default async function WorkspaceDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }) {
-  const { id } = await params;
+  const { id } = await params
 
   const workspace = await prisma.workspace.findUnique({
     where: { id },
-  });
+  })
 
   if (!workspace) {
-    return <NotFound />;
+    return <NotFound />
   }
 
   return (
@@ -30,11 +31,13 @@ export default async function WorkspaceDetailPage({
               Created {workspace.createdAt.toLocaleDateString()}
             </p>
           </div>
-
+        </div>
+        <div>
+          <WorkspaceActionsMenu workspace={workspace} />
         </div>
       </div>
 
-      <div>
+      <div className="border-t pt-8">
         <ProjectList workspace_id={id} />
       </div>
 
@@ -42,5 +45,5 @@ export default async function WorkspaceDetailPage({
         <GlobalRulesTable workspaceId={id} />
       </div>
     </div>
-  );
+  )
 }
