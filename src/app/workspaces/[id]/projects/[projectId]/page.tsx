@@ -4,6 +4,7 @@ import NotFound from '../../../../components/not-found'
 import { prisma } from '../../../../lib/db'
 import { AddRuleDialog } from '../components/add-rule-dialog'
 import { EditProjectDialog } from '../components/edit-project-dialog'
+import { ImportXMLDialog } from '../components/import-xml-dialog'
 import { RulesTable } from '../components/rules-table'
 import { TestValidationDialog } from '../components/test-validation-dialog'
 
@@ -72,12 +73,12 @@ export default async function ProjectDetailPage({
 
       {/* Rules Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">Rules</h2>
-          <AddRuleDialog
-            projectId={projectId}
-            workspaceId={project.workspaceId}
-          />
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Validation Rules</h2>
+          <div className="flex gap-2">
+            <ImportXMLDialog projectId={projectId} workspaceId={workspaceId} />
+            <AddRuleDialog projectId={projectId} workspaceId={workspaceId} />
+          </div>
         </div>
 
         <RulesTable projectId={projectId} workspaceId={project.workspaceId} />
