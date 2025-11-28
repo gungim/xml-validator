@@ -80,24 +80,28 @@ export async function PATCH(
       return createErrorResponse('Rule not found', 404)
     }
 
-    // Prevent editing if rule is linked to a global rule (except for detaching)
+    // Prevent editing if rule is linked to a global rule (except for detaching or path changes)
     if (existingRule.globalRuleId) {
-      // Allow only detaching (setting globalRuleId to null)
+      // Allow detaching (setting globalRuleId to null) or editing path
       const isDetaching = body.globalRuleId === null
+      const isOnlyPathEdit = Object.keys(body).every(
+        key => key === 'path' || body[key] === undefined
+      )
       const hasOtherEdits = Object.keys(body).some(
-        key => key !== 'globalRuleId' && body[key] !== undefined
+        key =>
+          key !== 'globalRuleId' && key !== 'path' && body[key] !== undefined
       )
 
       if (hasOtherEdits && !isDetaching) {
         return createErrorResponse(
-          'Cannot edit rules linked to global rules. Detach from global rule first or edit the global rule itself.',
+          'Cannot edit rules linked to global rules (except path). Detach from global rule first or edit the global rule itself.',
           400
         )
       }
 
-      // If detaching, allow it
-      if (isDetaching) {
-        // Just update globalRuleId and nothing else for now
+      // If detaching (and not editing anything else), handle it separately
+      if (isDetaching && !isOnlyPathEdit) {
+        // Update globalRuleId to null
         const updated = await prisma.rule.update({
           where: { id: parseInt(id) },
           data: { globalRuleId: null },
@@ -108,6 +112,8 @@ export async function PATCH(
         })
         return createSuccessResponse(updated)
       }
+
+      // If only editing path, continue to the normal update flow below
     }
 
     // Validate dataType changes

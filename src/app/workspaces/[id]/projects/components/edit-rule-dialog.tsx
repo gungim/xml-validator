@@ -41,7 +41,7 @@ interface EditRuleDialogProps {
 export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
   const [open, setOpen] = useState(false)
   const { data: rule, isLoading } = useRule(ruleId)
-  const updateRule = useUpdateRule()
+  const { mutateAsync: updateRule, isPending, error } = useUpdateRule()
   console.log(rule)
   const dataTypes = ['string', 'number', 'boolean', 'object', 'array']
 
@@ -67,61 +67,73 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
     },
     onSubmit: async ({ value }) => {
       setConditionError(null)
-      try {
-        // Build condition based on dataType
-        let condition = {}
-        if (value.dataType === 'string') {
-          // Validate string conditions
-          if (
-            stringCondition.minLength !== undefined &&
-            stringCondition.maxLength !== undefined
-          ) {
-            if (stringCondition.minLength > stringCondition.maxLength) {
-              setConditionError('Min length cannot be greater than max length')
-              return
-            }
-          }
 
-          condition = {
-            maxLength: stringCondition.maxLength,
-            minLength: stringCondition.minLength,
-            allowEmpty: stringCondition.allowEmpty ?? true,
-            pattern: stringCondition.pattern,
-          }
-        } else if (value.dataType === 'number') {
-          // Validate number conditions
-          if (
-            numberCondition.min !== undefined &&
-            numberCondition.max !== undefined
-          ) {
-            if (numberCondition.min > numberCondition.max) {
-              setConditionError('Min value cannot be greater than max value')
-              return
-            }
-          }
+      // If linked to global rule, only send path
+      if (isLinkedToGlobalRule) {
+        updateRule({
+          id: ruleId,
+          data: {
+            path: value.path,
+          },
+        }).then(() => {
+          setOpen(false)
+          setConditionError(null)
+        })
+        return
+      }
 
-          condition = {
-            min: numberCondition.min,
-            max: numberCondition.max,
+      // Build condition based on dataType
+      let condition = {}
+      if (value.dataType === 'string') {
+        // Validate string conditions
+        if (
+          stringCondition.minLength !== undefined &&
+          stringCondition.maxLength !== undefined
+        ) {
+          if (stringCondition.minLength > stringCondition.maxLength) {
+            setConditionError('Min length cannot be greater than max length')
+            return
           }
         }
 
-        await updateRule.mutateAsync({
-          id: ruleId,
-          data: {
-            name: value.name,
-            path: value.path,
-            dataType: value.dataType,
-            required: value.required,
-            description: value.description || null,
-            condition,
-          },
-        })
+        condition = {
+          maxLength: stringCondition.maxLength,
+          minLength: stringCondition.minLength,
+          allowEmpty: stringCondition.allowEmpty ?? true,
+          pattern: stringCondition.pattern,
+        }
+      } else if (value.dataType === 'number') {
+        // Validate number conditions
+        if (
+          numberCondition.min !== undefined &&
+          numberCondition.max !== undefined
+        ) {
+          if (numberCondition.min > numberCondition.max) {
+            setConditionError('Min value cannot be greater than max value')
+            return
+          }
+        }
+
+        condition = {
+          min: numberCondition.min,
+          max: numberCondition.max,
+        }
+      }
+
+      updateRule({
+        id: ruleId,
+        data: {
+          name: value.name,
+          path: value.path,
+          dataType: value.dataType,
+          required: value.required,
+          description: value.description || null,
+          condition,
+        },
+      }).then(() => {
         setOpen(false)
         setConditionError(null)
-      } catch (error) {
-        console.error('Failed to update rule:', error)
-      }
+      })
     },
   })
 
@@ -191,14 +203,15 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
             )}
 
             {isLinkedToGlobalRule && (
-              <div className="p-3 bg-orange-50 border border-orange-300 rounded text-sm text-orange-900">
-                🌐 This rule is linked to global rule "
+              <div className="p-3 bg-blue-50 border border-blue-300 rounded text-sm text-blue-900">
+                🌐 This rule is linked to a global rule.
                 <br />
-                <strong>Editing is disabled.</strong> To modify, either:
+                <strong>Only the Path can be edited.</strong> To modify other
+                fields:
                 <ul className="list-disc ml-5 mt-1">
                   <li>
                     Detach from global rule using the "Detach" button in the
-                    rules table
+                    rules table, or
                   </li>
                   <li>
                     Edit the global rule itself (changes will cascade to all
@@ -230,7 +243,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                     onBlur={field.handleBlur}
                     onChange={e => field.handleChange(e.target.value)}
                     placeholder="Enter rule name"
-                    disabled={updateRule.isPending}
+                    disabled={isPending || isLinkedToGlobalRule}
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-red-500">
@@ -263,7 +276,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                     onBlur={field.handleBlur}
                     onChange={e => field.handleChange(e.target.value)}
                     placeholder="e.g., user.email"
-                    disabled={updateRule.isPending}
+                    disabled={isPending}
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-red-500">
@@ -298,9 +311,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                       setNumberCondition({})
                     }}
                     disabled={
-                      updateRule.isPending ||
-                      !canChangeDataType ||
-                      isLinkedToGlobalRule
+                      isPending || !canChangeDataType || isLinkedToGlobalRule
                     }
                   >
                     <SelectTrigger id={field.name} className="w-full">
@@ -332,7 +343,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                     name={field.name}
                     checked={field.state.value}
                     onChange={e => field.handleChange(e.target.checked)}
-                    disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    disabled={isPending || isLinkedToGlobalRule}
                     className="h-4 w-4"
                   />
                   <Label htmlFor={field.name} className="cursor-pointer">
@@ -352,7 +363,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                     value={field.state.value}
                     onChange={e => field.handleChange(e.target.value)}
                     placeholder="Optional description"
-                    disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    disabled={isPending || isLinkedToGlobalRule}
                   />
                 </div>
               )}
@@ -380,7 +391,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                         })
                       }
                       placeholder="e.g., 5"
-                      disabled={updateRule.isPending || isLinkedToGlobalRule}
+                      disabled={isPending || isLinkedToGlobalRule}
                     />
                   </div>
 
@@ -400,7 +411,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                         })
                       }
                       placeholder="e.g., 255"
-                      disabled={updateRule.isPending || isLinkedToGlobalRule}
+                      disabled={isPending || isLinkedToGlobalRule}
                     />
                   </div>
                 </div>
@@ -417,7 +428,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                       })
                     }
                     placeholder="e.g., ^[a-zA-Z0-9]+$"
-                    disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    disabled={isPending || isLinkedToGlobalRule}
                   />
                 </div>
 
@@ -432,7 +443,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                         allowEmpty: e.target.checked,
                       })
                     }
-                    disabled={updateRule.isPending || isLinkedToGlobalRule}
+                    disabled={isPending || isLinkedToGlobalRule}
                     className="h-4 w-4"
                   />
                   <Label htmlFor="allowEmpty" className="cursor-pointer">
@@ -463,7 +474,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                         })
                       }
                       placeholder="e.g., 0"
-                      disabled={updateRule.isPending || isLinkedToGlobalRule}
+                      disabled={isPending || isLinkedToGlobalRule}
                     />
                   </div>
 
@@ -482,7 +493,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                         })
                       }
                       placeholder="e.g., 100"
-                      disabled={updateRule.isPending || isLinkedToGlobalRule}
+                      disabled={isPending || isLinkedToGlobalRule}
                     />
                   </div>
                 </div>
@@ -493,7 +504,7 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
               <p className="text-sm text-red-500">{conditionError}</p>
             )}
 
-            {updateRule.isError && (
+            {error && (
               <p className="text-sm text-red-500">
                 Failed to update rule. Please try again.
               </p>
@@ -504,12 +515,12 @@ export function EditRuleDialog({ ruleId }: EditRuleDialogProps) {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
-                disabled={updateRule.isPending}
+                disabled={isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={updateRule.isPending}>
-                {updateRule.isPending ? 'Updating...' : 'Update Rule'}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? 'Updating...' : 'Update Rule'}
               </Button>
             </div>
           </form>
