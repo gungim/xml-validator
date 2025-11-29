@@ -57,12 +57,20 @@ export function PermissionsDialog({
   // Fetch workspaces
   const { data: workspacesData } = useWorkspaces()
 
+  const handleRemovePermission = (workspaceId: string) => {
+    removePermission(workspaceId).then(() => {
+      onOpenChange(false)
+    })
+  }
+
   const handleAssignPermission = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedWorkspaceId) {
       assignPermission({
         workspaceId: selectedWorkspaceId,
         permission: selectedPermission,
+      }).then(() => {
+        onOpenChange(false)
       })
     }
   }
@@ -116,7 +124,9 @@ export function PermissionsDialog({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => removePermission(permission.workspaceId)}
+                      onClick={() =>
+                        handleRemovePermission(permission.workspaceId)
+                      }
                       disabled={isRemovingPermission}
                     >
                       <Trash2 className="h-4 w-4" />
