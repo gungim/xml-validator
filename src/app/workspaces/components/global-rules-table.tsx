@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { Loading } from '../../components/loading'
 import {
   useDeleteGlobalRule,
@@ -17,6 +18,7 @@ import {
 } from '../../lib/hooks/global-rules'
 import { usePermissions } from '../../lib/hooks/users'
 import { AddGlobalRuleDialog } from './add-global-rule-dialog'
+import { DeleteGlobalRuleDialog } from './delete-global-rule-dialog'
 import { EditGlobalRuleDialog } from './edit-global-rule-dialog'
 
 interface GlobalRulesTableProps {
@@ -41,16 +43,22 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
   const deleteGlobalRule = useDeleteGlobalRule()
   const { canEdit, canDelete } = usePermissions(workspaceId)
 
-  const handleDelete = async (globalRule: GlobalRule) => {
-    const childCount = globalRule.children?.length || 0
-    const message =
-      childCount > 0
-        ? `This global rule has ${childCount} child rule(s). Deleting it will also delete all children. Continue?`
-        : 'Are you sure you want to delete this global rule? Rules using it will lose this reference.'
+  // Dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedGlobalRule, setSelectedGlobalRule] =
+    useState<GlobalRule | null>(null)
 
-    if (confirm(message)) {
+  const handleDeleteClick = (globalRule: GlobalRule) => {
+    setSelectedGlobalRule(globalRule)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (selectedGlobalRule) {
       try {
-        await deleteGlobalRule.mutateAsync(globalRule.id)
+        await deleteGlobalRule.mutateAsync(selectedGlobalRule.id)
+        setDeleteDialogOpen(false)
+        setSelectedGlobalRule(null)
       } catch (error) {
         console.error('Failed to delete global rule:', error)
       }
@@ -151,7 +159,7 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleDelete(globalRule)}
+                onClick={() => handleDeleteClick(globalRule)}
                 disabled={deleteGlobalRule.isPending}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
@@ -198,6 +206,13 @@ export function GlobalRulesTable({ workspaceId }: GlobalRulesTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <DeleteGlobalRuleDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        globalRule={selectedGlobalRule}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }
