@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table'
 import { Loading } from '@/src/app/components/loading'
 import { Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import {
   useDeleteRule,
   useRules,
@@ -18,6 +19,8 @@ import {
 } from '../../../../lib/hooks/rules'
 import { usePermissions } from '../../../../lib/hooks/users'
 import { AddRuleDialog } from './add-rule-dialog'
+import { DeleteRuleDialog } from './delete-rule-dialog'
+import { DetachGlobalRuleDialog } from './detach-global-rule-dialog'
 import { EditRuleDialog } from './edit-rule-dialog'
 
 interface RulesTableProps {
@@ -47,33 +50,42 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
   const updateRule = useUpdateRule()
   const { canEdit, canDelete } = usePermissions(workspaceId)
 
-  const handleDelete = async (rule: Rule) => {
-    const childCount = rule.children?.length || 0
-    const message =
-      childCount > 0
-        ? `This rule has ${childCount} child rule(s). Deleting it will also delete all children. Continue?`
-        : 'Are you sure you want to delete this rule?'
+  // Dialog states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [detachDialogOpen, setDetachDialogOpen] = useState(false)
+  const [selectedRule, setSelectedRule] = useState<Rule | null>(null)
 
-    if (confirm(message)) {
+  const handleDeleteClick = (rule: Rule) => {
+    setSelectedRule(rule)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (selectedRule) {
       try {
-        await deleteRule.mutateAsync(rule.id)
+        await deleteRule.mutateAsync(selectedRule.id)
+        setDeleteDialogOpen(false)
+        setSelectedRule(null)
       } catch (error) {
         console.error('Failed to delete rule:', error)
       }
     }
   }
 
-  const handleDetachGlobalRule = async (rule: Rule) => {
-    if (
-      confirm(
-        `Are you sure you want to detach the global rule "${rule.globalRule?.name}"? This will convert it to a custom rule.`
-      )
-    ) {
+  const handleDetachClick = (rule: Rule) => {
+    setSelectedRule(rule)
+    setDetachDialogOpen(true)
+  }
+
+  const handleDetachGlobalRule = async () => {
+    if (selectedRule) {
       try {
         await updateRule.mutateAsync({
-          id: rule.id,
+          id: selectedRule.id,
           data: { globalRuleId: null },
         })
+        setDetachDialogOpen(false)
+        setSelectedRule(null)
       } catch (error) {
         console.error('Failed to detach global rule:', error)
       }
@@ -122,7 +134,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
                   </span>
                   {!rule.globalRule.parentId && canEdit && (
                     <button
-                      onClick={() => handleDetachGlobalRule(rule)}
+                      onClick={() => handleDetachClick(rule)}
                       className="text-xs text-gray-400 hover:text-red-500 underline"
                       disabled={updateRule.isPending}
                     >
@@ -164,7 +176,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleDelete(rule)}
+                onClick={() => handleDeleteClick(rule)}
                 disabled={deleteRule.isPending}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
@@ -192,20 +204,36 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto border rounded-lg">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Path</TableHead>
-            <TableHead>Required</TableHead>
-            <TableHead>Data Type</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>{topLevelRules.map(rule => renderRule(rule))}</TableBody>
-      </Table>
-    </div>
+    <>
+      <div className="overflow-x-auto border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Path</TableHead>
+              <TableHead>Required</TableHead>
+              <TableHead>Data Type</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>{topLevelRules.map(rule => renderRule(rule))}</TableBody>
+        </Table>
+      </div>
+
+      <DeleteRuleDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        rule={selectedRule}
+        onConfirm={handleDelete}
+      />
+
+      <DetachGlobalRuleDialog
+        open={detachDialogOpen}
+        onOpenChange={setDetachDialogOpen}
+        rule={selectedRule}
+        onConfirm={handleDetachGlobalRule}
+      />
+    </>
   )
 }
