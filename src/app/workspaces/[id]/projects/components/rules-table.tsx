@@ -120,7 +120,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
                   <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-1">
                     🌐 {rule.globalRule.name}
                   </span>
-                  {!rule.globalRule.parentId && (
+                  {!rule.globalRule.parentId && canEdit && (
                     <button
                       onClick={() => handleDetachGlobalRule(rule)}
                       className="text-xs text-gray-400 hover:text-red-500 underline"
@@ -160,7 +160,7 @@ export function RulesTable({ projectId, workspaceId }: RulesTableProps) {
             )}
 
             {canEdit && <EditRuleDialog ruleId={rule.id} />}
-            {canDelete && (
+            {!rule.globalRule?.parentId && canDelete && (
               <Button
                 variant="ghost"
                 size="sm"
