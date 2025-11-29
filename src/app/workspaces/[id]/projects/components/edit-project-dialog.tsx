@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { usePermissions } from '@/src/app/lib/hooks/users'
 import { useForm } from '@tanstack/react-form'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { z } from 'zod'
 import { useUpdateProject } from '../../../../lib/hooks/projects'
@@ -45,6 +46,7 @@ export function EditProjectDialog({
   endpointSecret,
 }: EditProjectDialogProps) {
   const { canEdit } = usePermissions(workspaceId)
+  const router = useRouter()
 
   const [open, setOpen] = useState(false)
   const [secret, setSecret] = useState(endpointSecret)
@@ -77,6 +79,7 @@ export function EditProjectDialog({
           endpointSlug: value.endpointSlug,
         },
       }).then(() => {
+        router.refresh()
         setOpen(false)
       })
     },
@@ -239,6 +242,7 @@ export function EditProjectDialog({
                   if (result?.data?.endpointSecret) {
                     setSecret(result.data.endpointSecret)
                   }
+                  router.refresh()
                 })
               }}
               disabled={isPending}
