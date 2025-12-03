@@ -67,6 +67,7 @@ export async function POST(
       data: {
         name: body.name.trim(),
         description: body.description?.trim() || null,
+        endpointSlug: body.endpointSlug?.trim() || undefined,
         workspaceId,
       },
       select: {
